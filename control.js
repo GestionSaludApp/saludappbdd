@@ -1,6 +1,6 @@
 const bdd = require('./bdd');
 
-function verificarDatosUsuario(usuario, callback) {
+function verificarNuevoUsuario(usuario, callback) {
   const camposObligatorios = [
     'email',
     'password',
@@ -27,6 +27,31 @@ function verificarDatosUsuario(usuario, callback) {
   });
 }
 
+function verificarUsuario(usuario, callback) {
+  const camposObligatorios = [
+    'email',
+    'password',
+  ];
+
+  const faltantes = camposObligatorios.filter(campo => {
+    return usuario[campo] === undefined || usuario[campo] === null || usuario[campo] === '';
+  });
+
+  if (faltantes.length > 0) {
+    return callback({ valido: false, mensaje: `Faltan campos: ${faltantes.join(', ')}` });
+  }
+
+  // Si pasa la validación, intentamos encontrarlo en la BDD
+  bdd.ingresarUsuario(usuario, (error, resultado) => {
+    if (error) {
+      return callback({ valido: false, mensaje: 'Error al buscar en la base de datos' });
+    }
+
+    return callback({ valido: true, resultado });
+  });
+}
+
 module.exports = {
-  verificarDatosUsuario
+  verificarNuevoUsuario,
+  verificarUsuario,
 };

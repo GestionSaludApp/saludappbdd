@@ -44,10 +44,48 @@ function registrarUsuario(datosUsuario, callback) {
   });
 }
 
+async function ingresarUsuario(email, password, callback) {
+
+  try {
+    // 1. Buscar en tabla usuario
+    const [usuarios] = await conexion.query(
+      'SELECT idUsuario, tipo FROM usuarios WHERE email = ? AND password = ?',
+      [email, password]
+    );
+
+    if (usuarios.length === 0) {
+      throw new Error('Credenciales inválidas');
+    }
+
+    const { idUsuario, tipo } = usuarios[0];
+
+    // 2. Buscar en la tabla correspondiente
+    let tabla;
+    if (tipo === 'paciente') tabla = 'usuariosPaciente';
+    else if (tipo === 'profesional') tabla = 'usuariosProfesional';
+    else if (tipo === 'administrador') tabla = 'usuariosAdministrador';
+    else throw new Error('Tipo de usuario desconocido');
+
+    const [result] = await conexion.query(
+      `SELECT * FROM ${tabla} WHERE idUsuario = ?`,
+      [idUsuario]
+    );
+
+    if (result.length === 0) {
+      throw new Error(`No se encontró el usuario en la tabla ${tabla}`);
+    }
+
+    return result[0]; // el objeto del usuario
+  } finally {
+    conexion.release();
+  }
+}
+
 function auditarCambios() {
   console.log('Se intentó auditar el cambio');
 }
 
 module.exports = {
-  registrarUsuario
+  registrarUsuario,
+  ingresarUsuario,
 };
