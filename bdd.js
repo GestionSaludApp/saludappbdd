@@ -1,24 +1,15 @@
-const mysql = require('mysql');
+const mysql = require('mysql2/promise');
 
-//Configuración
-const conexion = mysql.createConnection({
+// Configuración
+const conexion = mysql.createPool({
   host: 'mysql.db.mdbgo.com',
   user: 'saludapp_admin',
   password: 'Practica3!',
   database: 'saludapp_bdd'
 });
 
-//Conexión
-conexion.connect(function (err) {
-  if (err) {
-    console.error('Error al conectar a la base de datos:', err);
-  } else {
-    console.log('Conexión exitosa a la base de datos');
-  }
-});
-
-
-function registrarUsuario(datosUsuario, callback) {
+//FUNCION PARA REGISTRAR UN USUARIO EN LA BASE DE DATOS
+async function registrarUsuario(ip, datosUsuario) {
   const sql = `
     INSERT INTO usuarios (email, password, tipo, fechaCreacion, ultimoIngreso)
     VALUES (?, ?, ?, ?, ?)
@@ -32,23 +23,29 @@ function registrarUsuario(datosUsuario, callback) {
     datosUsuario.ultimoIngreso
   ];
 
-  conexion.query(sql, valores, function (err, result) {
-    if (err) {
-      console.error('Error al ejecutar INSERT:', err.sqlMessage || err);
-      return callback(err, null);
-    }
+  const conx = await conexion.getConnection();
+  try {
+    const [result] = await conx.query(sql, valores);
 
-    auditarCambios();
-    
-    return callback(null, result);
-  });
+    const idUsuario = result.insertId;
+    auditarCambios(idUsuario, ip, 'Se registró al usuario '+idUsuario);
+
+    return result;
+  } catch (err) {
+    console.error('Error al registrar usuario:', err.sqlMessage || err);
+    throw err;
+  } finally {
+    conx.release();
+  }
 }
 
-async function ingresarUsuario(email, password, callback) {
+// Ingresar usuario (usa promesa)
+async function ingresarUsuario(email, password) {
+  const conx = await conexion.getConnection();
 
   try {
-    // 1. Buscar en tabla usuario
-    const [usuarios] = await conexion.query(
+    //Buscar en tabla usuarios
+    const [usuarios] = await conx.query(
       'SELECT idUsuario, tipo FROM usuarios WHERE email = ? AND password = ?',
       [email, password]
     );
@@ -59,14 +56,14 @@ async function ingresarUsuario(email, password, callback) {
 
     const { idUsuario, tipo } = usuarios[0];
 
-    // 2. Buscar en la tabla correspondiente
+    //Buscar en la tabla correspondiente
     let tabla;
     if (tipo === 'paciente') tabla = 'usuariosPaciente';
     else if (tipo === 'profesional') tabla = 'usuariosProfesional';
     else if (tipo === 'administrador') tabla = 'usuariosAdministrador';
     else throw new Error('Tipo de usuario desconocido');
 
-    const [result] = await conexion.query(
+    const [result] = await conx.query(
       `SELECT * FROM ${tabla} WHERE idUsuario = ?`,
       [idUsuario]
     );
@@ -75,17 +72,49 @@ async function ingresarUsuario(email, password, callback) {
       throw new Error(`No se encontró el usuario en la tabla ${tabla}`);
     }
 
-    return result[0]; // el objeto del usuario
+    return { usuario: result[0], tipo: tipo };
   } finally {
-    conexion.release();
+    conx.release();
   }
 }
 
-function auditarCambios() {
-  console.log('Se intentó auditar el cambio');
+async function auditarCambios(idUsuario, ip, cambio) {
+  const conx = await conexion.getConnection();
+  const fecha = obtenerFechaFormateada();
+  
+  const sql = `
+    INSERT INTO auditoria (fecha, idUsuario, IP, cambio)
+    VALUES (?, ?, ?, ?)
+  `;
+
+  const valores = [fecha, idUsuario, ip, cambio];
+
+  try {
+    await conx.query(sql, valores);
+  } catch (err) {
+    console.error('Error al auditar cambio:', err.sqlMessage || err);
+  } finally {
+    conx.release();
+  }
+}
+
+function obtenerFechaFormateada() {
+  const ahora = new Date();
+
+  //Ajustar 3 horas para Argentina (GMT-3)
+  ahora.setHours(ahora.getHours() - 3);
+
+  const dia = String(ahora.getDate()).padStart(2, '0');
+  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+  const anio = ahora.getFullYear();
+
+  const horas = String(ahora.getHours()).padStart(2, '0');
+  const minutos = String(ahora.getMinutes()).padStart(2, '0');
+
+  return `${dia}/${mes}/${anio}, ${horas}:${minutos}`;
 }
 
 module.exports = {
   registrarUsuario,
-  ingresarUsuario,
+  ingresarUsuario
 };

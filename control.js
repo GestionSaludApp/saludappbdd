@@ -1,6 +1,6 @@
 const bdd = require('./bdd');
 
-function verificarNuevoUsuario(usuario, callback) {
+async function verificarNuevoUsuario(ip, usuario) {
   const camposObligatorios = [
     'email',
     'password',
@@ -14,41 +14,36 @@ function verificarNuevoUsuario(usuario, callback) {
   });
 
   if (faltantes.length > 0) {
-    return callback({ valido: false, mensaje: `Faltan campos: ${faltantes.join(', ')}` });
+    return { valido: false, mensaje: `Faltan campos: ${faltantes.join(', ')}` };
   }
 
-  // Si pasa la validación, intentamos registrar en la BDD
-  bdd.registrarUsuario(usuario, (error, resultado) => {
-    if (error) {
-      return callback({ valido: false, mensaje: 'Error al registrar en la base de datos' });
-    }
-
-    return callback({ valido: true, resultado });
-  });
+  try {
+    const resultado = await bdd.registrarUsuario(ip, usuario);
+    return { valido: true, resultado };
+  } catch (error) {
+    console.error('Error al registrar en la base de datos:', error);
+    return { valido: false, mensaje: 'Error al registrar en la base de datos' };
+  }
 }
 
-function verificarUsuario(usuario, callback) {
-  const camposObligatorios = [
-    'email',
-    'password',
-  ];
+async function verificarUsuario(usuario) {
+  const camposObligatorios = ['email', 'password'];
 
   const faltantes = camposObligatorios.filter(campo => {
     return usuario[campo] === undefined || usuario[campo] === null || usuario[campo] === '';
   });
 
   if (faltantes.length > 0) {
-    return callback({ valido: false, mensaje: `Faltan campos: ${faltantes.join(', ')}` });
+    return { valido: false, mensaje: `Faltan campos: ${faltantes.join(', ')}` };
   }
 
-  // Si pasa la validación, intentamos encontrarlo en la BDD
-  bdd.ingresarUsuario(usuario, (error, resultado) => {
-    if (error) {
-      return callback({ valido: false, mensaje: 'Error al buscar en la base de datos' });
-    }
-
-    return callback({ valido: true, resultado });
-  });
+  try {
+    const resultado = await bdd.ingresarUsuario(usuario.email, usuario.password);
+    return { valido: true, usuario: resultado.usuario, tipo: resultado.tipo };
+  } catch (error) {
+    console.error('Error al buscar en la base de datos:', error);
+    return { valido: false, mensaje: 'Error al buscar en la base de datos' };
+  }
 }
 
 module.exports = {
