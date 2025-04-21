@@ -1,6 +1,6 @@
 const bdd = require('./bdd');
 
-async function verificarNuevoUsuario(ip, usuario, datosUsuario) {
+async function verificarNuevoUsuario(ip, nuevoUsuario, datosUsuario) {
   const camposObligatorios = [
     'email',
     'password',
@@ -9,8 +9,11 @@ async function verificarNuevoUsuario(ip, usuario, datosUsuario) {
     'ultimoIngreso'
   ];
 
+  console.log(nuevoUsuario);
+  console.log(datosUsuario);
+
   const faltantes = camposObligatorios.filter(campo => {
-    return usuario[campo] === undefined || usuario[campo] === null || usuario[campo] === '';
+    return nuevoUsuario[campo] === undefined || nuevoUsuario[campo] === null || nuevoUsuario[campo] === '';
   });
 
   if (faltantes.length > 0) {
@@ -18,7 +21,7 @@ async function verificarNuevoUsuario(ip, usuario, datosUsuario) {
   }
 
   try {
-    const resultado = await bdd.registrarUsuario(ip, usuario, datosUsuario);
+    const resultado = await bdd.registrarUsuario(ip, nuevoUsuario, datosUsuario);
     return { valido: true, resultado };
   } catch (error) {
     console.error('Error al registrar en la base de datos:', error);

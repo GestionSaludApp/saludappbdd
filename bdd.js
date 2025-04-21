@@ -10,6 +10,9 @@ const conexion = mysql.createPool({
 
 //FUNCION PARA REGISTRAR UN USUARIO EN LA BASE DE DATOS
 async function registrarUsuario(ip, nuevoUsuario, datosUsuario) {
+  console.log(nuevoUsuario);
+  console.log(datosUsuario);
+
   const sql = `
     INSERT INTO usuarios (email, password, tipo, fechaCreacion, ultimoIngreso)
     VALUES (?, ?, ?, ?, ?)
@@ -60,9 +63,9 @@ async function registrarUsuario(ip, nuevoUsuario, datosUsuario) {
   let sqlDatos = '';
   let valoresDatos = [];
 
-  if (tablaDestino === 'profesionales') {
+  if (tablaDestino === 'usuariosProfesional') {
     sqlDatos = `
-      INSERT INTO profesionales (idUsuario, nombre, apellido, dni, fechaNacimiento, especialidad)
+      INSERT INTO usuariosProfesional (idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
     valoresDatos = [idUsuario, nombre, apellido, dni, fechaNacimiento, especialidad];
@@ -77,7 +80,7 @@ async function registrarUsuario(ip, nuevoUsuario, datosUsuario) {
   await conx.query(sqlDatos, valoresDatos);
 
   //Si hay disponibilidad y la tabla es profesionales, insertarlas
-  if (tablaDestino === 'profesionales' && Array.isArray(disponibilidad)) {
+  if (tablaDestino === 'usuariosProfesional' && Array.isArray(disponibilidad)) {
     const sqlDisp = `
       INSERT INTO disponibilidades (idUsuario, idSeccional, diaSemana, horaInicio, horaFin)
       VALUES (?, ?, ?, ?, ?)
