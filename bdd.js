@@ -88,14 +88,14 @@ async function registrarUsuario(ip, nuevoUsuario, datosUsuario) {
 
     for (const disp of disponibilidad) {
       const {
-        idSeccional = 0,
+        seccional = 0,
         dia = 0,
         horaInicio = 0,
         horaFin = 0
       } = disp;
 
       //Insertar disponibilidad (idDisponibilidad se ignora si es auto_inc)
-      await conx.query(sqlDisp, [idUsuario, idSeccional, dia, horaInicio, horaFin]);
+      await conx.query(sqlDisp, [idUsuario, seccional, dia, horaInicio, horaFin]);
     }
   }
 
