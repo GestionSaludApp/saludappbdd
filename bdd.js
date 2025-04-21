@@ -9,18 +9,18 @@ const conexion = mysql.createPool({
 });
 
 //FUNCION PARA REGISTRAR UN USUARIO EN LA BASE DE DATOS
-async function registrarUsuario(ip, datosUsuario) {
+async function registrarUsuario(ip, nuevoUsuario, datosUsuario) {
   const sql = `
     INSERT INTO usuarios (email, password, tipo, fechaCreacion, ultimoIngreso)
     VALUES (?, ?, ?, ?, ?)
   `;
 
   const valores = [
-    datosUsuario.email,
-    datosUsuario.password,
-    datosUsuario.tipo,
-    datosUsuario.fechaCreacion,
-    datosUsuario.ultimoIngreso
+    nuevoUsuario.email,
+    nuevoUsuario.password,
+    nuevoUsuario.tipo,
+    nuevoUsuario.fechaCreacion,
+    nuevoUsuario.ultimoIngreso
   ];
 
   const conx = await conexion.getConnection();
@@ -30,16 +30,82 @@ async function registrarUsuario(ip, datosUsuario) {
     const idUsuario = result.insertId;
     auditarCambios(idUsuario, ip, 'Se registró al usuario '+idUsuario);
 
-    return result;
+  // Determinar la tabla según el tipo
+  let tablaDestino = '';
+  switch (nuevoUsuario.tipo.toLowerCase()) {
+    case 'paciente':
+      tablaDestino = 'usuariosPaciente';
+      break;
+    case 'profesional':
+      tablaDestino = 'usuariosProfesional';
+      break;
+    case 'administrador':
+      tablaDestino = 'usuariosAdministrador';
+      break;
+    default:
+      throw new Error('Tipo de usuario desconocido: ' + nuevoUsuario.tipo);
+  }
+
+  //Extraer datos con valores por defecto
+  const {
+    nombre = 'nombre',
+    apellido = 'apellido',
+    dni = '00000000',
+    fechaNacimiento = '1900-01-01',
+    especialidad = 0,
+    disponibilidad = []
+  } = datosUsuario || {};
+
+  // Definir SQL e insertar en tabla correspondiente
+  let sqlDatos = '';
+  let valoresDatos = [];
+
+  if (tablaDestino === 'profesionales') {
+    sqlDatos = `
+      INSERT INTO profesionales (idUsuario, nombre, apellido, dni, fechaNacimiento, especialidad)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    valoresDatos = [idUsuario, nombre, apellido, dni, fechaNacimiento, especialidad];
+  } else {
+    sqlDatos = `
+      INSERT INTO ${tablaDestino} (idUsuario, nombre, apellido, dni, fechaNacimiento)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    valoresDatos = [idUsuario, nombre, apellido, dni, fechaNacimiento];
+  }
+
+  await conx.query(sqlDatos, valoresDatos);
+
+  //Si hay disponibilidad y la tabla es profesionales, insertarlas
+  if (tablaDestino === 'profesionales' && Array.isArray(disponibilidad)) {
+    const sqlDisp = `
+      INSERT INTO disponibilidades (idUsuario, idSeccional, diaSemana, horaInicio, horaFin)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+
+    for (const disp of disponibilidad) {
+      const {
+        idSeccional = 0,
+        dia = 0,
+        horaInicio = 0,
+        horaFin = 0
+      } = disp;
+
+      //Insertar disponibilidad (idDisponibilidad se ignora si es auto_inc)
+      await conx.query(sqlDisp, [idUsuario, idSeccional, dia, horaInicio, horaFin]);
+    }
+  }
+
+  return result;
   } catch (err) {
-    console.error('Error al registrar usuario:', err.sqlMessage || err);
-    throw err;
+  console.error('Error al registrar usuario:', err.sqlMessage || err);
+  throw err;
   } finally {
-    conx.release();
+  conx.release();
   }
 }
 
-// Ingresar usuario (usa promesa)
+//Ingresar usuario
 async function ingresarUsuario(email, password) {
   const conx = await conexion.getConnection();
 

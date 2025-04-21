@@ -15,8 +15,8 @@ app.listen(process.env.PORT || 3000, () => {
 app.post('/registrarUsuario', async (req, res) => {
   try {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const datosUsuario = req.body;
-    const resultado = await control.verificarNuevoUsuario(ip, datosUsuario);
+    const { nuevoUsuario, datosUsuario } = req.body;
+    const resultado = await control.verificarNuevoUsuario(ip, nuevoUsuario, datosUsuario);
 
     if (!resultado.valido) {
       return res.status(400).json({ mensaje: resultado.mensaje });
