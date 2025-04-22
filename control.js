@@ -39,7 +39,7 @@ async function verificarUsuario(usuario) {
 
   try {
     const resultado = await bdd.ingresarUsuario(usuario.email, usuario.password);
-    return { valido: true, usuario: resultado.usuario, tipo: resultado.tipo };
+    return { valido: true, tipo: resultado.tipo, usuario: resultado.usuario, perfilActivo: resultado.perfilActivo };
   } catch (error) {
     console.error('Error al buscar en la base de datos:', error);
     return { valido: false, mensaje: 'Error al buscar en la base de datos' };

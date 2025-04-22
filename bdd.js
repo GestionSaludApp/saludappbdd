@@ -121,7 +121,7 @@ async function ingresarUsuario(email, password) {
   try {
     //Buscar en tabla usuarios
     const [usuarios] = await conx.query(
-      'SELECT idUsuario, tipo FROM usuarios WHERE email = ? AND password = ?',
+      'SELECT * FROM usuarios WHERE email = ? AND password = ?',
       [email, password]
     );
 
@@ -130,6 +130,7 @@ async function ingresarUsuario(email, password) {
     }
 
     const { idUsuario, tipo } = usuarios[0];
+    usuarios[0].password = '*****';
 
     //Buscar en la tabla correspondiente
     let tabla;
@@ -147,7 +148,15 @@ async function ingresarUsuario(email, password) {
       throw new Error(`No se encontró el usuario en la tabla ${tabla}`);
     }
 
-    return { usuario: result[0], tipo: tipo };
+    // Buscar perfiles subrogados
+    const [perfiles] = await conx.query(
+      'SELECT * FROM usuarioPerfiles WHERE idUsuario = ?',
+      [idUsuario]
+    );
+
+    usuarios[0].perfilesSubrogados = perfiles;
+
+    return { tipo: tipo, usuario: usuarios[0], perfilActivo: result[0], };
   } finally {
     conx.release();
   }

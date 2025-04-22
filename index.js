@@ -43,7 +43,7 @@ app.post('/ingresarUsuario', async (req, res) => {
       return res.status(400).json({ mensaje: resultado.mensaje });
     }
 
-    res.status(200).json({ mensaje: 'Usuario autenticado correctamente', tipo: resultado.tipo, usuario: resultado.usuario });
+    res.status(200).json({ mensaje: 'Usuario autenticado correctamente', tipo: resultado.tipo, usuario: resultado.usuario, perfilActivo: resultado.perfilActivo });
   } catch (err) {
     console.error('Error interno en ingreso de usuario:', err);
     res.status(500).json({ mensaje: 'Error interno del servidor' });
