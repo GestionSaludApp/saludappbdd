@@ -9,10 +9,7 @@ const conexion = mysql.createPool({
 });
 
 //FUNCION PARA REGISTRAR UN USUARIO EN LA BASE DE DATOS
-async function registrarUsuario(ip, nuevoUsuario, datosUsuario) {
-  console.log(nuevoUsuario);
-  console.log(datosUsuario);
-
+async function registrarUsuario(ip, nuevoUsuario, datosPerfil) {
   const sql = `
     INSERT INTO usuarios (email, password, tipo, fechaCreacion, ultimoIngreso)
     VALUES (?, ?, ?, ?, ?)
@@ -55,9 +52,9 @@ async function registrarUsuario(ip, nuevoUsuario, datosUsuario) {
     apellido = 'apellido',
     dni = '00000000',
     fechaNacimiento = '1900-01-01',
-    especialidad = 0,
+    idEspecialidad = 0,
     disponibilidad = []
-  } = datosUsuario || {};
+  } = datosPerfil || {};
 
   // Definir SQL e insertar en tabla correspondiente
   let sqlDatos = '';
@@ -68,7 +65,7 @@ async function registrarUsuario(ip, nuevoUsuario, datosUsuario) {
       INSERT INTO usuariosProfesional (idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
-    valoresDatos = [idUsuario, nombre, apellido, dni, fechaNacimiento, especialidad];
+    valoresDatos = [idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad];
   } else {
     sqlDatos = `
       INSERT INTO ${tablaDestino} (idUsuario, nombre, apellido, dni, fechaNacimiento)
@@ -98,6 +95,15 @@ async function registrarUsuario(ip, nuevoUsuario, datosUsuario) {
       await conx.query(sqlDisp, [idUsuario, seccional, dia, horaInicio, horaFin]);
     }
   }
+
+  //Insertar perfil principal en la tabla usuarioPerfiles
+  const sqlPerfil = `
+  INSERT INTO usuarioPerfiles (idUsuario, rol, idRol, nombre)
+  VALUES (?, ?, ?, ?)
+  `;
+  const valoresPerfil = [idUsuario, nuevoUsuario.tipo, idUsuario, 'Perfil principal'];
+
+  await conx.query(sqlPerfil, valoresPerfil);
 
   return result;
   } catch (err) {
