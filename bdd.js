@@ -30,17 +30,28 @@ async function registrarUsuario(ip, nuevoUsuario, datosPerfil) {
     const idUsuario = result.insertId;
     auditarCambios(idUsuario, ip, 'Se registró al usuario '+idUsuario);
 
+  //Insertar perfil principal en la tabla usuarioPerfiles
+  const sqlPerfil = `
+  INSERT INTO usuarioPerfiles (idUsuario, tipo, alias)
+  VALUES (?, ?, ?)
+  `;
+  const valoresPerfil = [idUsuario, nuevoUsuario.tipo, 'Perfil principal'];
+
+  const [resultadoPerfil] = await conx.query(sqlPerfil, valoresPerfil);
+
+  const idPerfil = resultadoPerfil.insertId;
+
   // Determinar la tabla según el tipo
   let tablaDestino = '';
   switch (nuevoUsuario.tipo.toLowerCase()) {
     case 'paciente':
-      tablaDestino = 'usuariosPaciente';
+      tablaDestino = 'perfilesPaciente';
       break;
     case 'profesional':
-      tablaDestino = 'usuariosProfesional';
+      tablaDestino = 'perfilesProfesional';
       break;
     case 'administrador':
-      tablaDestino = 'usuariosAdministrador';
+      tablaDestino = 'perfilesAdministrador';
       break;
     default:
       throw new Error('Tipo de usuario desconocido: ' + nuevoUsuario.tipo);
@@ -60,24 +71,24 @@ async function registrarUsuario(ip, nuevoUsuario, datosPerfil) {
   let sqlDatos = '';
   let valoresDatos = [];
 
-  if (tablaDestino === 'usuariosProfesional') {
+  if (tablaDestino === 'perfilesProfesional') {
     sqlDatos = `
-      INSERT INTO usuariosProfesional (idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO perfilesProfesional (idPerfil, idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
-    valoresDatos = [idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad];
+    valoresDatos = [idPerfil, idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad];
   } else {
     sqlDatos = `
-      INSERT INTO ${tablaDestino} (idUsuario, nombre, apellido, dni, fechaNacimiento)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO ${tablaDestino} (idPerfil, idUsuario, nombre, apellido, dni, fechaNacimiento)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
-    valoresDatos = [idUsuario, nombre, apellido, dni, fechaNacimiento];
+    valoresDatos = [idPerfil, idUsuario, nombre, apellido, dni, fechaNacimiento];
   }
 
   await conx.query(sqlDatos, valoresDatos);
 
   //Si hay disponibilidad y la tabla es profesionales, insertarlas
-  if (tablaDestino === 'usuariosProfesional' && Array.isArray(disponibilidad)) {
+  if (tablaDestino === 'perfilesProfesional' && Array.isArray(disponibilidad)) {
     const sqlDisp = `
       INSERT INTO disponibilidades (idUsuario, idSeccional, diaSemana, horaInicio, horaFin)
       VALUES (?, ?, ?, ?, ?)
@@ -95,15 +106,6 @@ async function registrarUsuario(ip, nuevoUsuario, datosPerfil) {
       await conx.query(sqlDisp, [idUsuario, seccional, dia, horaInicio, horaFin]);
     }
   }
-
-  //Insertar perfil principal en la tabla usuarioPerfiles
-  const sqlPerfil = `
-  INSERT INTO usuarioPerfiles (idUsuario, rol, idRol, alias)
-  VALUES (?, ?, ?, ?)
-  `;
-  const valoresPerfil = [idUsuario, nuevoUsuario.tipo, idUsuario, 'Perfil principal'];
-
-  await conx.query(sqlPerfil, valoresPerfil);
 
   return result;
   } catch (err) {
@@ -156,13 +158,13 @@ async function obtenerPerfilUsuario(idUsuario, tipo) {
     let tabla;
     switch (tipo) {
       case 'paciente':
-        tabla = 'usuariosPaciente';
+        tabla = 'perfilesPaciente';
         break;
       case 'profesional':
-        tabla = 'usuariosProfesional';
+        tabla = 'perfilesProfesional';
         break;
       case 'administrador':
-        tabla = 'usuariosAdministrador';
+        tabla = 'perfilesAdministrador';
         break;
       default:
         throw new Error('Tipo de usuario desconocido');
