@@ -98,7 +98,7 @@ async function registrarUsuario(ip, nuevoUsuario, datosPerfil) {
 
   //Insertar perfil principal en la tabla usuarioPerfiles
   const sqlPerfil = `
-  INSERT INTO usuarioPerfiles (idUsuario, rol, idRol, nombre)
+  INSERT INTO usuarioPerfiles (idUsuario, rol, idRol, alias)
   VALUES (?, ?, ?, ?)
   `;
   const valoresPerfil = [idUsuario, nuevoUsuario.tipo, idUsuario, 'Perfil principal'];
@@ -114,12 +114,10 @@ async function registrarUsuario(ip, nuevoUsuario, datosPerfil) {
   }
 }
 
-//Ingresar usuario
 async function ingresarUsuario(email, password) {
   const conx = await conexion.getConnection();
 
   try {
-    //Buscar en tabla usuarios
     const [usuarios] = await conx.query(
       'SELECT * FROM usuarios WHERE email = ? AND password = ?',
       [email, password]
@@ -132,12 +130,43 @@ async function ingresarUsuario(email, password) {
     const { idUsuario, tipo } = usuarios[0];
     usuarios[0].password = '*****';
 
-    //Buscar en la tabla correspondiente
+    //Obtener el perfil principal
+    const perfilActivo = await obtenerPerfilUsuario(idUsuario, tipo);
+
+    //Agregar disponibilidades si es profesional
+    if (tipo === 'profesional') {
+      perfilActivo.disponibilidad = await obtenerDisponibilidades(idUsuario);
+    }
+
+    // Agregar perfiles subrogados
+    usuarios[0].perfiles = await obtenerPerfiles(idUsuario);
+
+    await actualizarUltimoIngreso(idUsuario);
+
+    return { usuario: usuarios[0], perfilActivo };
+  } finally {
+    conx.release();
+  }
+}
+
+async function obtenerPerfilUsuario(idUsuario, tipo) {
+  const conx = await conexion.getConnection();
+
+  try {
     let tabla;
-    if (tipo === 'paciente') tabla = 'usuariosPaciente';
-    else if (tipo === 'profesional') tabla = 'usuariosProfesional';
-    else if (tipo === 'administrador') tabla = 'usuariosAdministrador';
-    else throw new Error('Tipo de usuario desconocido');
+    switch (tipo) {
+      case 'paciente':
+        tabla = 'usuariosPaciente';
+        break;
+      case 'profesional':
+        tabla = 'usuariosProfesional';
+        break;
+      case 'administrador':
+        tabla = 'usuariosAdministrador';
+        break;
+      default:
+        throw new Error('Tipo de usuario desconocido');
+    }
 
     const [result] = await conx.query(
       `SELECT * FROM ${tabla} WHERE idUsuario = ?`,
@@ -148,15 +177,56 @@ async function ingresarUsuario(email, password) {
       throw new Error(`No se encontró el usuario en la tabla ${tabla}`);
     }
 
-    // Buscar perfiles subrogados
+    return result[0];
+  } finally {
+    conx.release();
+  }
+}
+
+async function obtenerDisponibilidades(idUsuario) {
+  const conx = await conexion.getConnection();
+
+  try {
+    const [disponibilidades] = await conx.query(
+      'SELECT * FROM disponibilidades WHERE idUsuario = ?',
+      [idUsuario]
+    );
+    return disponibilidades;
+  } finally {
+    conx.release();
+  }
+}
+
+async function obtenerPerfiles(idUsuario) {
+  const conx = await conexion.getConnection();
+
+  try {
     const [perfiles] = await conx.query(
       'SELECT * FROM usuarioPerfiles WHERE idUsuario = ?',
       [idUsuario]
     );
+    return perfiles;
+  } finally {
+    conx.release();
+  }
+}
 
-    usuarios[0].perfilesSubrogados = perfiles;
+async function actualizarUltimoIngreso(idUsuario) {
+  const conx = await conexion.getConnection();
 
-    return { tipo: tipo, usuario: usuarios[0], perfilActivo: result[0], };
+  try {
+    const fechaHora = obtenerFechaFormateada();
+
+    const sql = `
+      UPDATE usuarios
+      SET ultimoIngreso = ?
+      WHERE idUsuario = ?
+    `;
+
+    await conx.query(sql, [fechaHora, idUsuario]);
+  } catch (err) {
+    console.error('Error al actualizar el último ingreso:', err.sqlMessage || err);
+    throw err;
   } finally {
     conx.release();
   }
