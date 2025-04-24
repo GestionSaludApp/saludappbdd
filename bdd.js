@@ -8,56 +8,60 @@ const conexion = mysql.createPool({
   database: 'saludapp_bdd'
 });
 
-//FUNCION PARA REGISTRAR UN USUARIO EN LA BASE DE DATOS
-async function registrarUsuario(ip, nuevoUsuario, datosPerfil) {
+//FUNCIONES PARA EL REGISTRO
+async function registrarUsuario(ip, nuevoUsuario, nuevoPerfil) {
   const sql = `
-    INSERT INTO usuarios (email, password, tipo, fechaCreacion, ultimoIngreso)
-    VALUES (?, ?, ?, ?, ?)
+    INSERT INTO usuarios (email, password, fechaCreacion, ultimoIngreso)
+    VALUES (?, ?, ?, ?)
   `;
-
   const valores = [
     nuevoUsuario.email,
     nuevoUsuario.password,
-    nuevoUsuario.tipo,
     nuevoUsuario.fechaCreacion,
     nuevoUsuario.ultimoIngreso
   ];
 
   const conx = await conexion.getConnection();
   try {
-    const [result] = await conx.query(sql, valores);
+    const [resultadoUsuario] = await conx.query(sql, valores);
+    const idUsuario = resultadoUsuario.insertId;
 
-    const idUsuario = result.insertId;
-    auditarCambios(idUsuario, ip, 'Se registró al usuario '+idUsuario);
+    auditarCambios(idUsuario, ip, 'Se registró al usuario ' + idUsuario);
 
-  //Insertar perfil principal en la tabla usuarioPerfiles
-  const sqlPerfil = `
-  INSERT INTO usuarioPerfiles (idUsuario, tipo, alias)
-  VALUES (?, ?, ?)
-  `;
-  const valoresPerfil = [idUsuario, nuevoUsuario.tipo, 'Perfil principal'];
+    const [resultadoPerfil] = await agregarPerfilUsuario(conx, idUsuario, nuevoPerfil.categoria, nuevoPerfil.rol, nuevoPerfil.alias);
+    const idPerfil = resultadoPerfil.insertId;
 
-  const [resultadoPerfil] = await conx.query(sqlPerfil, valoresPerfil);
+    await registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil);
 
-  const idPerfil = resultadoPerfil.insertId;
-
-  // Determinar la tabla según el tipo
-  let tablaDestino = '';
-  switch (nuevoUsuario.tipo.toLowerCase()) {
-    case 'paciente':
-      tablaDestino = 'perfilesPaciente';
-      break;
-    case 'profesional':
-      tablaDestino = 'perfilesProfesional';
-      break;
-    case 'administrador':
-      tablaDestino = 'perfilesAdministrador';
-      break;
-    default:
-      throw new Error('Tipo de usuario desconocido: ' + nuevoUsuario.tipo);
+    return result;
+  } catch (err) {
+    console.error('Error al registrar usuario:', err.sqlMessage || err);
+    throw err;
+  } finally {
+    conx.release();
   }
+}
 
-  //Extraer datos con valores por defecto
+async function agregarPerfilUsuario(conx, idUsuario, categoria, rol, alias) {
+  const sql = `
+    INSERT INTO usuarioPerfiles (idUsuario, categoria, rol, alias)
+    VALUES (?, ?, ?, ?)
+  `;
+  const valoresPerfil = [idUsuario, categoria, rol, alias];
+  const [resultadoPerfilUsuario] = await conx.query(sql, valoresPerfil);
+  return resultadoPerfilUsuario.insertId;
+}
+
+async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
+  const tablaDestino = (() => {
+    switch (nuevoPerfil.rol.toLowerCase()) {
+      case 'paciente': return 'perfilesPaciente';
+      case 'profesional': return 'perfilesProfesional';
+      case 'administrador': return 'perfilesAdministrador';
+      default: throw new Error('Tipo de usuario desconocido: ' + nuevoPerfil.rol);
+    }
+  })();
+
   const {
     nombre = 'nombre',
     apellido = 'apellido',
@@ -65,18 +69,17 @@ async function registrarUsuario(ip, nuevoUsuario, datosPerfil) {
     fechaNacimiento = '1900-01-01',
     idEspecialidad = 0,
     disponibilidad = []
-  } = datosPerfil || {};
+  } = nuevoPerfil || {};
 
-  // Definir SQL e insertar en tabla correspondiente
   let sqlDatos = '';
   let valoresDatos = [];
 
   if (tablaDestino === 'perfilesProfesional') {
     sqlDatos = `
-      INSERT INTO perfilesProfesional (idPerfil, idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad)
+      INSERT INTO perfilesProfesional (idPerfil, idUsuario, idEspecialidad, nombre, apellido, dni, fechaNacimiento)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
-    valoresDatos = [idPerfil, idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad];
+    valoresDatos = [idPerfil, idUsuario, idEspecialidad, nombre, apellido, dni, fechaNacimiento];
   } else {
     sqlDatos = `
       INSERT INTO ${tablaDestino} (idPerfil, idUsuario, nombre, apellido, dni, fechaNacimiento)
@@ -84,14 +87,12 @@ async function registrarUsuario(ip, nuevoUsuario, datosPerfil) {
     `;
     valoresDatos = [idPerfil, idUsuario, nombre, apellido, dni, fechaNacimiento];
   }
-
   await conx.query(sqlDatos, valoresDatos);
 
-  //Si hay disponibilidad y la tabla es profesionales, insertarlas
   if (tablaDestino === 'perfilesProfesional' && Array.isArray(disponibilidad)) {
     const sqlDisp = `
-      INSERT INTO disponibilidades (idUsuario, idSeccional, diaSemana, horaInicio, horaFin)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO disponibilidades (idUsuario, idPerfil, idSeccional, diaSemana, horaInicio, horaFin)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
 
     for (const disp of disponibilidad) {
@@ -102,20 +103,12 @@ async function registrarUsuario(ip, nuevoUsuario, datosPerfil) {
         horaFin = 0
       } = disp;
 
-      //Insertar disponibilidad (idDisponibilidad se ignora si es auto_inc)
-      await conx.query(sqlDisp, [idUsuario, seccional, dia, horaInicio, horaFin]);
+      await conx.query(sqlDisp, [idUsuario, idPerfil, seccional, dia, horaInicio, horaFin]);
     }
-  }
-
-  return result;
-  } catch (err) {
-  console.error('Error al registrar usuario:', err.sqlMessage || err);
-  throw err;
-  } finally {
-  conx.release();
   }
 }
 
+//FUNCIONES PARA EL INGRESO
 async function ingresarUsuario(email, password) {
   const conx = await conexion.getConnection();
 
@@ -129,14 +122,17 @@ async function ingresarUsuario(email, password) {
       throw new Error('Credenciales inválidas');
     }
 
-    const { idUsuario, tipo } = usuarios[0];
+    const { idPerfilPrincipal } = usuarios[0].idPerfilPrincipal;
+    const idUsuario = usuarios[0].idUsuario;
     usuarios[0].password = '*****';
 
     //Obtener el perfil principal
-    const perfilActivo = await obtenerPerfilUsuario(idUsuario, tipo);
+    const resultadoPerfil = await obtenerPerfilUsuario(idPerfilPrincipal);
+    const rol = resultadoPerfil.rol;
+    const perfilActivo = resultadoPerfil.perfil;
 
     //Agregar disponibilidades si es profesional
-    if (tipo === 'profesional') {
+    if (rol === 'profesional') {
       perfilActivo.disponibilidad = await obtenerDisponibilidades(idUsuario);
     }
 
@@ -151,12 +147,17 @@ async function ingresarUsuario(email, password) {
   }
 }
 
-async function obtenerPerfilUsuario(idUsuario, tipo) {
+async function obtenerPerfilUsuario(idPerfil) {
   const conx = await conexion.getConnection();
+
+  const [resultadoPerfilUsuario] = await conx.query(
+    `SELECT * FROM perfilesUsuario WHERE idPerfil = ?`,
+    [idPerfil]
+  );
 
   try {
     let tabla;
-    switch (tipo) {
+    switch (resultadoPerfilUsuario.rol) {
       case 'paciente':
         tabla = 'perfilesPaciente';
         break;
@@ -170,16 +171,16 @@ async function obtenerPerfilUsuario(idUsuario, tipo) {
         throw new Error('Tipo de usuario desconocido');
     }
 
-    const [result] = await conx.query(
-      `SELECT * FROM ${tabla} WHERE idUsuario = ?`,
-      [idUsuario]
+    const [resultadoPerfilRol] = await conx.query(
+      `SELECT * FROM ${tabla} WHERE idPerfil = ?`,
+      [idPerfil]
     );
 
     if (result.length === 0) {
-      throw new Error(`No se encontró el usuario en la tabla ${tabla}`);
+      throw new Error(`No se encontró el perfil en la tabla ${tabla}`);
     }
 
-    return result[0];
+    return { perfil: resultadoPerfilRol[0], rol: resultadoPerfilUsuario.rol};
   } finally {
     conx.release();
   }
