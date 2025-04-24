@@ -1,4 +1,4 @@
-const bdd = require('./bdd');
+const bddUsuario = require('./bddUsuario');
 
 async function verificarNuevoUsuario(ip, nuevoUsuario, nuevoPerfil) {
   const camposObligatorios = [
@@ -17,7 +17,7 @@ async function verificarNuevoUsuario(ip, nuevoUsuario, nuevoPerfil) {
   }
 
   try {
-    const resultado = await bdd.registrarUsuario(ip, nuevoUsuario, nuevoPerfil);
+    const resultado = await bddUsuario.registrarUsuario(ip, nuevoUsuario, nuevoPerfil);
     return { valido: true, resultado };
   } catch (error) {
     console.error('Error al registrar en la base de datos:', error);
@@ -37,7 +37,7 @@ async function verificarUsuario(usuario) {
   }
 
   try {
-    const resultado = await bdd.ingresarUsuario(usuario.email, usuario.password);
+    const resultado = await bddUsuario.ingresarUsuario(usuario.email, usuario.password);
     return { valido: true, usuario: resultado.usuario, perfilActivo: resultado.perfilActivo };
   } catch (error) {
     console.error('Error al buscar en la base de datos:', error);

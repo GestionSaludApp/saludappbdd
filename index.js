@@ -17,9 +17,6 @@ app.post('/registrarUsuario', async (req, res) => {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const { nuevoUsuario, nuevoPerfil } = req.body;
     
-    //console.log(nuevoUsuario);
-    //console.log(datosPerfil);
-    
     const resultado = await control.verificarNuevoUsuario(ip, nuevoUsuario, nuevoPerfil);
 
     if (!resultado.valido) {

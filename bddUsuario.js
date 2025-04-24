@@ -28,12 +28,11 @@ async function registrarUsuario(ip, nuevoUsuario, nuevoPerfil) {
 
     auditarCambios(idUsuario, ip, 'Se registró al usuario ' + idUsuario);
 
-    const [resultadoPerfil] = await agregarPerfilUsuario(conx, idUsuario, nuevoPerfil.categoria, nuevoPerfil.rol, nuevoPerfil.alias);
-    const idPerfil = resultadoPerfil.insertId;
+    const idPerfil = await agregarPerfilUsuario(conx, idUsuario, nuevoPerfil.categoria, nuevoPerfil.rol, nuevoPerfil.alias);
 
     await registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil);
 
-    return result;
+    return resultadoUsuario;
   } catch (err) {
     console.error('Error al registrar usuario:', err.sqlMessage || err);
     throw err;
@@ -122,18 +121,27 @@ async function ingresarUsuario(email, password) {
       throw new Error('Credenciales inválidas');
     }
 
-    const { idPerfilPrincipal } = usuarios[0].idPerfilPrincipal;
     const idUsuario = usuarios[0].idUsuario;
     usuarios[0].password = '*****';
 
     //Obtener el perfil principal
-    const resultadoPerfil = await obtenerPerfilUsuario(idPerfilPrincipal);
-    const rol = resultadoPerfil.rol;
-    const perfilActivo = resultadoPerfil.perfil;
-
+    const resultadoPerfil = await obtenerPerfiles(idUsuario, 'principal');
+    
+    if (!resultadoPerfil || resultadoPerfil.length === 0) {
+      throw new Error('No se encontró un perfil principal para este usuario');
+    }
+    
+    const perfil = resultadoPerfil[0];
+    
+    const perfilActivo = await obtenerPerfilRol(perfil.rol, perfil.idPerfil);
+    
+    perfilActivo.alias = perfil.alias;
+    perfilActivo.categoria = perfil.categoria;
+    perfilActivo.rol = perfil.rol;
+    
     //Agregar disponibilidades si es profesional
-    if (rol === 'profesional') {
-      perfilActivo.disponibilidad = await obtenerDisponibilidades(idUsuario);
+    if (perfilActivo.rol === 'profesional') {
+      perfilActivo.disponibilidad = await obtenerDisponibilidades(perfilActivo.idPerfil);
     }
 
     // Agregar perfiles subrogados
@@ -147,17 +155,12 @@ async function ingresarUsuario(email, password) {
   }
 }
 
-async function obtenerPerfilUsuario(idPerfil) {
+async function obtenerPerfilRol(rol, idPerfil) {
   const conx = await conexion.getConnection();
-
-  const [resultadoPerfilUsuario] = await conx.query(
-    `SELECT * FROM perfilesUsuario WHERE idPerfil = ?`,
-    [idPerfil]
-  );
 
   try {
     let tabla;
-    switch (resultadoPerfilUsuario.rol) {
+    switch (rol) {
       case 'paciente':
         tabla = 'perfilesPaciente';
         break;
@@ -176,23 +179,23 @@ async function obtenerPerfilUsuario(idPerfil) {
       [idPerfil]
     );
 
-    if (result.length === 0) {
+    if (resultadoPerfilRol.length === 0) {
       throw new Error(`No se encontró el perfil en la tabla ${tabla}`);
     }
 
-    return { perfil: resultadoPerfilRol[0], rol: resultadoPerfilUsuario.rol};
+    return {...resultadoPerfilRol[0],};
   } finally {
     conx.release();
   }
 }
 
-async function obtenerDisponibilidades(idUsuario) {
+async function obtenerDisponibilidades(idPerfil) {
   const conx = await conexion.getConnection();
 
   try {
     const [disponibilidades] = await conx.query(
       'SELECT * FROM disponibilidades WHERE idUsuario = ?',
-      [idUsuario]
+      [idPerfil]
     );
     return disponibilidades;
   } finally {
@@ -200,19 +203,27 @@ async function obtenerDisponibilidades(idUsuario) {
   }
 }
 
-async function obtenerPerfiles(idUsuario) {
+async function obtenerPerfiles(idUsuario, categoria = null) {
   const conx = await conexion.getConnection();
 
   try {
-    const [perfiles] = await conx.query(
-      'SELECT * FROM usuarioPerfiles WHERE idUsuario = ?',
-      [idUsuario]
-    );
+    let query = 'SELECT * FROM usuarioPerfiles WHERE idUsuario = ?';
+    const params = [idUsuario];
+
+    if (categoria) {
+      query += ' AND categoria = ?';
+      params.push(categoria);
+    }
+
+    const [perfiles] = await conx.query(query, params);
     return perfiles;
   } finally {
     conx.release();
   }
 }
+
+
+//FUNCIONES GENERALES
 
 async function actualizarUltimoIngreso(idUsuario) {
   const conx = await conexion.getConnection();
