@@ -1,4 +1,5 @@
 const bddUsuario = require('./bddUsuario');
+const bddTurno = require('./bddTurno');
 
 async function verificarNuevoUsuario(ip, nuevoUsuario, nuevoPerfil) {
   const camposObligatorios = [
@@ -45,7 +46,18 @@ async function verificarUsuario(usuario) {
   }
 }
 
+async function buscarDisponibilidades(filtros) {
+  try {
+    const resultado = await bddTurno.obtenerDisponibilidades(filtros);
+    return { valido: true, disponibilidades: resultado };
+  } catch (error) {
+    console.error('Error al consultar disponibilidades:', error);
+    return { valido: false, mensaje: 'Error al consultar disponibilidades' };
+  }
+}
+
 module.exports = {
   verificarNuevoUsuario,
-  verificarUsuario
+  verificarUsuario,
+  buscarDisponibilidades
 };

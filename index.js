@@ -46,3 +46,16 @@ app.post('/ingresarUsuario', async (req, res) => {
     res.status(500).json({ mensaje: 'Error interno del servidor' });
   }
 });
+
+//BUSCAR DISPONIBILIDADES
+app.post('/buscarDisponibilidades', async (req, res) => {
+  const filtros = req.body;
+
+  const resultado = await control.buscarDisponibilidades(filtros);
+
+  if (resultado.valido) {
+    res.status(200).json(resultado.disponibilidades);
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});

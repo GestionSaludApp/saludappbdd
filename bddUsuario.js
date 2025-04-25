@@ -96,13 +96,13 @@ async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
 
     for (const disp of disponibilidad) {
       const {
-        seccional = 0,
-        dia = 0,
+        idSeccional = 0,
+        diaSemana = 0,
         horaInicio = 0,
         horaFin = 0
       } = disp;
 
-      await conx.query(sqlDisp, [idUsuario, idPerfil, seccional, dia, horaInicio, horaFin]);
+      await conx.query(sqlDisp, [idUsuario, idPerfil, idSeccional, diaSemana, horaInicio, horaFin]);
     }
   }
 }
@@ -194,7 +194,7 @@ async function obtenerDisponibilidades(idPerfil) {
 
   try {
     const [disponibilidades] = await conx.query(
-      'SELECT * FROM disponibilidades WHERE idUsuario = ?',
+      'SELECT * FROM disponibilidades WHERE idPerfil = ?',
       [idPerfil]
     );
     return disponibilidades;
