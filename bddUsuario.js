@@ -52,6 +52,7 @@ async function agregarPerfilUsuario(conx, idUsuario, categoria, rol, alias) {
 }
 
 async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
+  let idProfesional = null;
   const tablaDestino = (() => {
     switch (nuevoPerfil.rol.toLowerCase()) {
       case 'paciente': return 'perfilesPaciente';
@@ -79,30 +80,33 @@ async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
     valoresDatos = [idPerfil, idUsuario, idEspecialidad, nombre, apellido, dni, fechaNacimiento];
+    const [resultado] = await conexion.query(sqlDatos, valoresDatos);
+    idProfesional = resultado.insertId;
   } else {
     sqlDatos = `
       INSERT INTO ${tablaDestino} (idPerfil, idUsuario, nombre, apellido, dni, fechaNacimiento)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
     valoresDatos = [idPerfil, idUsuario, nombre, apellido, dni, fechaNacimiento];
+    await conx.query(sqlDatos, valoresDatos);
   }
-  await conx.query(sqlDatos, valoresDatos);
-
+  
   if (tablaDestino === 'perfilesProfesional' && Array.isArray(disponibilidad)) {
     const sqlDisp = `
-      INSERT INTO disponibilidades (idUsuario, idPerfil, idSeccional, diaSemana, horaInicio, horaFin)
+      INSERT INTO disponibilidades (idSeccional, idProfesional, idEspecialidad, diaSemana, horaInicio, horaFin)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
 
     for (const disp of disponibilidad) {
       const {
         idSeccional = 0,
+        idEspecialidad = 0,
         diaSemana = 0,
         horaInicio = 0,
         horaFin = 0
       } = disp;
 
-      await conx.query(sqlDisp, [idUsuario, idPerfil, idSeccional, diaSemana, horaInicio, horaFin]);
+      await conx.query(sqlDisp, [idSeccional, idProfesional, idEspecialidad, diaSemana, horaInicio, horaFin]);
     }
   }
 }

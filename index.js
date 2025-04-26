@@ -59,3 +59,16 @@ app.post('/buscarDisponibilidades', async (req, res) => {
     res.status(400).json({ error: resultado.mensaje });
   }
 });
+
+//BUSCAR TURNOS
+app.post('/buscarTurnos', async (req, res) => {
+  const filtros = req.body;
+
+  const resultado = await control.buscarTurnos(filtros);
+
+  if (resultado.valido) {
+    res.status(200).json(resultado.turnos);
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});

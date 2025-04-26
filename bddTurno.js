@@ -14,17 +14,10 @@ async function obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana 
   const params = [];
 
   if (idEspecialidad !== undefined) {
-    const idPerfiles = await obtenerPerfilesPorEspecialidad(idEspecialidad);
-    if (idPerfiles.length > 0) {
-      const perfilesValidos = idPerfiles.map(() => '?').join(', ');
-      query += ` AND idPerfil IN (${perfilesValidos})`;
-      params.push(...idPerfiles);
-    } else {
-      // No hay perfiles con esa especialidad, forzamos resultado vacío
-      return [];
-    }
+    query += ' AND idEspecialidad = ?';
+    params.push(idEspecialidad);
   }
-
+  
   if (idSeccional !== undefined) {
     query += ' AND idSeccional = ?';
     params.push(idSeccional);
@@ -38,6 +31,74 @@ async function obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana 
   const [resultadoDisponibilidades] = await conexion.query(query, params);
   return resultadoDisponibilidades;
 }
+
+async function obtenerTurnos({ idEspecialidad, idSeccional, diaSemana }) {
+  // 1. Obtener disponibilidades filtradas
+  const disponibilidades = await obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana });
+
+  const turnosDisponibles = [];
+
+  for (const disp of disponibilidades) {
+    // 2. Obtener duración del turno para la especialidad de cada disponibilidad
+    const [especialidad] = await conexion.query(
+      'SELECT duracion FROM especialidades WHERE idEspecialidad = ?',
+      [disp.idEspecialidad]
+    );
+    const duracionTurno = especialidad[0]?.duracion;
+
+    if (!duracionTurno) {
+      console.warn(`No se encontró duración para idEspecialidad: ${disp.idEspecialidad}`);
+      continue; // saltar esta disponibilidad
+    }
+
+    let hora = disp.horaInicio;
+    while (hora + duracionTurno <= disp.horaFin) {
+      // 3. Generar fecha próxima del diaSemana
+      const fecha = calcularProximaFecha(disp.diaSemana); // Usamos el diaSemana de la disponibilidad
+      const fechaStr = formatearFechaParaIdTurno(fecha); // 'ddmmyyyy'
+
+      // 4. Generar ID del turno
+      const idTurno = `s${disp.idSeccional}p${disp.idProfesional}e${disp.idEspecialidad}d${fechaStr}h${hora}`;
+
+      // 5. Verificar si existe en turnosActivos
+      const [existe] = await conexion.query('SELECT 1 FROM turnosActivos WHERE idTurno = ?', [idTurno]);
+      if (existe.length === 0) {
+        turnosDisponibles.push({
+          idTurno,
+          idProfesional: disp.idProfesional,
+          idEspecialidad: disp.idEspecialidad,
+          idSeccional: disp.idSeccional,
+          diaSemana: disp.diaSemana,
+          fecha,
+          horaInicio: hora,
+          horaFin: hora + duracionTurno,
+        });
+      }
+
+      hora += duracionTurno;
+    }
+  }
+
+  return turnosDisponibles;
+}
+
+function calcularProximaFecha(diaSemana) {
+  const hoy = new Date();
+  const hoyDia = hoy.getDay(); // 0-6
+  let diff = diaSemana - hoyDia;
+  if (diff < 0) diff += 7; // próxima semana
+  hoy.setDate(hoy.getDate() + diff);
+  return hoy;
+}
+
+function formatearFechaParaIdTurno(fecha) {
+  const d = String(fecha.getDate()).padStart(2, '0');
+  const m = String(fecha.getMonth() + 1).padStart(2, '0');
+  const a = fecha.getFullYear();
+  return `${d}${m}${a}`;
+}
+
+
 
 async function obtenerPerfilesPorEspecialidad(idEspecialidad) {
   const query = 'SELECT idPerfil FROM perfilesProfesional WHERE idEspecialidad = ?';
@@ -84,5 +145,6 @@ function obtenerFechaFormateada() {
 }
 
 module.exports = {
-  obtenerDisponibilidades
+  obtenerDisponibilidades,
+  obtenerTurnos
 };
