@@ -145,7 +145,7 @@ async function ingresarUsuario(email, password) {
     
     //Agregar disponibilidades si es profesional
     if (perfilActivo.rol === 'profesional') {
-      perfilActivo.disponibilidad = await obtenerDisponibilidades(perfilActivo.idPerfil);
+      perfilActivo.disponibilidad = await obtenerDisponibilidades(perfilActivo.idProfesional);
     }
 
     // Agregar perfiles subrogados
@@ -193,13 +193,13 @@ async function obtenerPerfilRol(rol, idPerfil) {
   }
 }
 
-async function obtenerDisponibilidades(idPerfil) {
+async function obtenerDisponibilidades(idProfesional) {
   const conx = await conexion.getConnection();
 
   try {
     const [disponibilidades] = await conx.query(
-      'SELECT * FROM disponibilidades WHERE idPerfil = ?',
-      [idPerfil]
+      'SELECT * FROM disponibilidades WHERE idProfesional = ?',
+      [idProfesional]
     );
     return disponibilidades;
   } finally {
