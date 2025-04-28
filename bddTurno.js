@@ -58,20 +58,20 @@ async function obtenerTurnos({ idEspecialidad, idSeccional, diaSemana }) {
       const fechaStr = formatearFechaParaIdTurno(fecha); // 'ddmmyyyy'
 
       // 4. Generar ID del turno
-      const idTurno = `s${disp.idSeccional}p${disp.idProfesional}e${disp.idEspecialidad}d${fechaStr}h${hora}`;
+      const idTurno = `s${disp.idSeccional}p${disp.idPerfilProfesional}e${disp.idEspecialidad}d${fechaStr}h${hora}`;
 
       // 5. Verificar si existe en turnosActivos
-      const [existe] = await conexion.query('SELECT 1 FROM turnosActivos WHERE idTurno = ?', [idTurno]);
-      if (existe.length === 0) {
+      const disponible = await verificarDisponibilidadTurno(idTurno);
+      if (disponible) {
         turnosDisponibles.push({
           idTurno,
-          idProfesional: disp.idProfesional,
+          idPerfilProfesional: disp.idPerfilProfesional,
           idEspecialidad: disp.idEspecialidad,
           idSeccional: disp.idSeccional,
           diaSemana: disp.diaSemana,
           fecha,
           horaInicio: hora,
-          horaFin: hora + duracionTurno,
+          horaFin: hora + duracionTurno
         });
       }
 
@@ -82,23 +82,49 @@ async function obtenerTurnos({ idEspecialidad, idSeccional, diaSemana }) {
   return turnosDisponibles;
 }
 
-function calcularProximaFecha(diaSemana) {
-  const hoy = new Date();
-  const hoyDia = hoy.getDay(); // 0-6
-  let diff = diaSemana - hoyDia;
-  if (diff < 0) diff += 7; // próxima semana
-  hoy.setDate(hoy.getDate() + diff);
-  return hoy;
+// Función para insertar un turno
+async function solicitarTurno(turno) {
+  const disponible = await verificarDisponibilidadTurno(turno.idTurno);
+
+  if (!disponible) {
+      throw new Error('El turno ya existe.');
+  }
+
+  const query = `
+      INSERT INTO turnosActivos 
+      (idTurno, idSeccional, idPerfilProfesional, idEspecialidad, diaSemana, horaInicio, horaFin, idPerfilPaciente)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  const valores = [
+      turno.idTurno,
+      turno.idSeccional,
+      turno.idPerfilProfesional,
+      turno.idEspecialidad,
+      turno.diaSemana,
+      turno.horaInicio,
+      turno.horaFin,
+      turno.idPerfilPaciente
+  ];
+
+  const [resultado] = await conexion.query(query, valores);
+
+  auditarCambios(0, 0, 'Se solicitó el turno '+turno.idTurno+' para el paciente ' + turno.idPerfilPaciente);
+
+  //Retorna un objeto que identifica el turno insertado
+  return {
+    idTurno: turno.idTurno,
+    mensaje: 'Turno insertado exitosamente'
+  };
 }
 
-function formatearFechaParaIdTurno(fecha) {
-  const d = String(fecha.getDate()).padStart(2, '0');
-  const m = String(fecha.getMonth() + 1).padStart(2, '0');
-  const a = fecha.getFullYear();
-  return `${d}${m}${a}`;
+//Verificar disponibilidad de turnos
+async function verificarDisponibilidadTurno(idTurno) {
+  const [rows] = await conexion.query(
+    'SELECT EXISTS(SELECT 1 FROM turnosActivos WHERE idTurno = ?) AS disponible',
+    [idTurno]
+  );
+  return rows[0].disponible === 0; // true si NO existe (disponible)
 }
-
-
 
 async function obtenerPerfilesPorEspecialidad(idEspecialidad) {
   const query = 'SELECT idPerfil FROM perfilesProfesional WHERE idEspecialidad = ?';
@@ -144,7 +170,24 @@ function obtenerFechaFormateada() {
   return `${dia}/${mes}/${anio}, ${horas}:${minutos}`;
 }
 
+function calcularProximaFecha(diaSemana) {
+  const hoy = new Date();
+  const hoyDia = hoy.getDay(); // 0-6
+  let diff = diaSemana - hoyDia;
+  if (diff < 0) diff += 7; // próxima semana
+  hoy.setDate(hoy.getDate() + diff);
+  return hoy;
+}
+
+function formatearFechaParaIdTurno(fecha) {
+  const d = String(fecha.getDate()).padStart(2, '0');
+  const m = String(fecha.getMonth() + 1).padStart(2, '0');
+  const a = fecha.getFullYear();
+  return `${d}${m}${a}`;
+}
+
 module.exports = {
   obtenerDisponibilidades,
-  obtenerTurnos
+  obtenerTurnos,
+  solicitarTurno
 };

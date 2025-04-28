@@ -52,7 +52,6 @@ async function agregarPerfilUsuario(conx, idUsuario, categoria, rol, alias) {
 }
 
 async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
-  let idProfesional = null;
   const tablaDestino = (() => {
     switch (nuevoPerfil.rol.toLowerCase()) {
       case 'paciente': return 'perfilesPaciente';
@@ -81,7 +80,6 @@ async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
     `;
     valoresDatos = [idPerfil, idUsuario, idEspecialidad, nombre, apellido, dni, fechaNacimiento];
     const [resultado] = await conexion.query(sqlDatos, valoresDatos);
-    idProfesional = resultado.insertId;
   } else {
     sqlDatos = `
       INSERT INTO ${tablaDestino} (idPerfil, idUsuario, nombre, apellido, dni, fechaNacimiento)
@@ -93,7 +91,7 @@ async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
   
   if (tablaDestino === 'perfilesProfesional' && Array.isArray(disponibilidad)) {
     const sqlDisp = `
-      INSERT INTO disponibilidades (idSeccional, idProfesional, idEspecialidad, diaSemana, horaInicio, horaFin)
+      INSERT INTO disponibilidades (idSeccional, idPerfilProfesional, idEspecialidad, diaSemana, horaInicio, horaFin)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
 
@@ -106,7 +104,7 @@ async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
         horaFin = 0
       } = disp;
 
-      await conx.query(sqlDisp, [idSeccional, idProfesional, idEspecialidad, diaSemana, horaInicio, horaFin]);
+      await conx.query(sqlDisp, [idSeccional, idPerfil, idEspecialidad, diaSemana, horaInicio, horaFin]);
     }
   }
 }
@@ -145,7 +143,7 @@ async function ingresarUsuario(email, password) {
     
     //Agregar disponibilidades si es profesional
     if (perfilActivo.rol === 'profesional') {
-      perfilActivo.disponibilidad = await obtenerDisponibilidades(perfilActivo.idProfesional);
+      perfilActivo.disponibilidad = await obtenerDisponibilidades(perfilActivo.idPerfil);
     }
 
     // Agregar perfiles subrogados
@@ -193,13 +191,13 @@ async function obtenerPerfilRol(rol, idPerfil) {
   }
 }
 
-async function obtenerDisponibilidades(idProfesional) {
+async function obtenerDisponibilidades(idPerfilProfesional) {
   const conx = await conexion.getConnection();
 
   try {
     const [disponibilidades] = await conx.query(
-      'SELECT * FROM disponibilidades WHERE idProfesional = ?',
-      [idProfesional]
+      'SELECT * FROM disponibilidades WHERE idPerfilProfesional = ?',
+      [idPerfilProfesional]
     );
     return disponibilidades;
   } finally {

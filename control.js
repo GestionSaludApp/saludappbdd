@@ -66,9 +66,20 @@ async function buscarTurnos(filtros) {
   }
 }
 
+async function solicitarTurno(turno) {
+  try {
+    const resultado = await bddTurno.solicitarTurno(turno);
+    return { valido: true, turno: resultado };
+  } catch (error) {
+    console.error('Error al solicitar turnos: ', error);
+    return { valido: false, mensaje: 'Error al solicitar turnos' };
+  }
+}
+
 module.exports = {
   verificarNuevoUsuario,
   verificarUsuario,
   buscarDisponibilidades,
-  buscarTurnos
+  buscarTurnos,
+  solicitarTurno,
 };

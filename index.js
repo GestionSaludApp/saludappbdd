@@ -72,3 +72,15 @@ app.post('/buscarTurnos', async (req, res) => {
     res.status(400).json({ error: resultado.mensaje });
   }
 });
+
+//SOLICITAR TURNOS
+app.post('/solicitarTurno', async (req, res) => {
+  const turno = req.body;
+  const resultado = await control.solicitarTurno(turno);
+  if (resultado.valido) {
+    res.status(200).json(exito);
+  } else {
+    res.status(400).json({error: resultado.mensaje})
+  }
+});
+
