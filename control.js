@@ -34,7 +34,7 @@ async function registrarPerfilAdicional(ip, idUsuario, nuevoPerfil) {
   ];
 
   const faltantes = camposObligatorios.filter(campo => {
-    return nuevoUsuario[campo] === undefined || nuevoUsuario[campo] === null || nuevoUsuario[campo] === '';
+    return nuevoPerfil[campo] === undefined || nuevoPerfil[campo] === null || nuevoPerfil[campo] === '';
   });
 
   if (faltantes.length > 0) {
