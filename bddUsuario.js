@@ -109,6 +109,22 @@ async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
   }
 }
 
+async function registrarPerfilAdicional(ip, idUsuario, nuevoPerfil){
+  const conx = await conexion.getConnection();
+  try {
+    const idPerfil = await agregarPerfilUsuario(conx, idUsuario, nuevoPerfil.categoria, nuevoPerfil.rol, nuevoPerfil.alias);
+    await registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil);
+    auditarCambios(idUsuario, ip, 'Se agregó el perfil ' + idPerfil + ' al usuario ' + idUsuario);
+
+    return idPerfil;
+  } catch (err) {
+    console.error('Error al agregar perfil:', err.sqlMessage || err);
+    throw err;
+  } finally {
+    conx.release();
+  }
+}
+
 //FUNCIONES PARA EL INGRESO
 async function ingresarUsuario(email, password) {
   const conx = await conexion.getConnection();
@@ -286,5 +302,6 @@ function obtenerFechaFormateada() {
 
 module.exports = {
   registrarUsuario,
+  registrarPerfilAdicional,
   ingresarUsuario
 };

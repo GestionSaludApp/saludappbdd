@@ -30,6 +30,25 @@ app.post('/registrarUsuario', async (req, res) => {
   }
 });
 
+//AGREGAR UN NUEVO PERFIL A UN USUARIO EXISTENTE
+app.post('/registrarPerfilAdicional', async (req, res) => {
+  try {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const { idUsuario, nuevoPerfil } = req.body;
+    
+    const resultado = await control.registrarPerfilAdicional(ip, idUsuario, nuevoPerfil);
+
+    if (!resultado.valido) {
+      return res.status(400).json({ mensaje: resultado.mensaje });
+    }
+
+    res.status(200).json({ mensaje: 'Perfil registrado correctamente', resultado: resultado.resultado });
+  } catch (err) {
+    console.error('Error interno en /registrarPerfilAdicional:', err);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+});
+
 //LOGUEAR UN USUARIO
 app.post('/ingresarUsuario', async (req, res) => {
   try {

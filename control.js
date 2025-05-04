@@ -26,6 +26,30 @@ async function verificarNuevoUsuario(ip, nuevoUsuario, nuevoPerfil) {
   }
 }
 
+async function registrarPerfilAdicional(ip, idUsuario, nuevoPerfil) {
+  const camposObligatorios = [
+    'alias',
+    'categoria',
+    'rol'
+  ];
+
+  const faltantes = camposObligatorios.filter(campo => {
+    return nuevoUsuario[campo] === undefined || nuevoUsuario[campo] === null || nuevoUsuario[campo] === '';
+  });
+
+  if (faltantes.length > 0) {
+    return { valido: false, mensaje: `Faltan campos: ${faltantes.join(', ')}` };
+  }
+
+  try {
+    const resultado = await bddUsuario.registrarPerfilAdicional(ip, idUsuario, nuevoPerfil);
+    return { valido: true, resultado };
+  } catch (error) {
+    console.error('Error al registrar en la base de datos:', error);
+    return { valido: false, mensaje: 'Error al registrar en la base de datos' };
+  }
+}
+
 async function verificarUsuario(usuario) {
   const camposObligatorios = ['email', 'password'];
 
@@ -79,6 +103,7 @@ async function solicitarTurno(turno) {
 module.exports = {
   verificarNuevoUsuario,
   verificarUsuario,
+  registrarPerfilAdicional,
   buscarDisponibilidades,
   buscarTurnos,
   solicitarTurno,
