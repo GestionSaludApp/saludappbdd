@@ -1,5 +1,6 @@
 const bddUsuario = require('./bddUsuario');
 const bddTurno = require('./bddTurno');
+const bddGestion = requiere('./bddGestion');
 
 async function verificarNuevoUsuario(ip, nuevoUsuario, nuevoPerfil) {
   const camposObligatorios = [
@@ -100,6 +101,32 @@ async function solicitarTurno(turno) {
   }
 }
 
+async function buscarEspecialidades(filtros) {
+  try {
+    const resultado = await bddGestion.buscarEspecialidades(filtros);
+    return { valido: true, especialidades: resultado };
+  } catch (error) {
+    console.error('Error al consultar especialidades:', error);
+    return { valido: false, mensaje: 'Error al consultar especialidades' };
+  }
+}
+
+async function modificarEspecialidad(datosEspecialidad) {
+  const { idEspecialidad, nombre, duracion } = datosEspecialidad;
+
+  if (!idEspecialidad || !nombre || duracion == null) {
+    throw new Error("Faltan datos para actualizar la especialidad.");
+  }
+
+  try {
+    const resultado = await bddGestion.modificarEspecialidad(datosEspecialidad);
+    return { valido: true, especialidad: resultado };
+  } catch (error) {
+    console.error('Error al modificar la especialidad: ', error);
+    return { valido: false, mensaje: 'Error al modificar la especialidad' };
+  }
+}
+
 module.exports = {
   verificarNuevoUsuario,
   verificarUsuario,
@@ -107,4 +134,6 @@ module.exports = {
   buscarDisponibilidades,
   buscarTurnos,
   solicitarTurno,
+  buscarEspecialidades,
+  modificarEspecialidad,
 };

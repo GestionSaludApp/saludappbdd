@@ -103,3 +103,27 @@ app.post('/solicitarTurno', async (req, res) => {
   }
 });
 
+//BUSCAR ESPECIALIDADES
+app.post('/buscarEspecialidades', async (req, res) => {
+  const filtros = req.body;
+
+  const resultado = await control.buscarEspecialidades(filtros);
+
+  if (resultado.valido) {
+    res.status(200).json(resultado.especialidades);
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});
+
+//MODIFICAR ESPECIALIDADES
+app.post('/modificarEspecialidad', async (req, res) => {
+  const datosEspecialidad = req.body;
+  const resultado = await control.modificarEspecialidad(datosEspecialidad);
+  if (resultado.valido) {
+    res.status(200).json(exito);
+  } else {
+    res.status(400).json({error: resultado.mensaje})
+  }
+});
+
