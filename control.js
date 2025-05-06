@@ -1,6 +1,6 @@
 const bddUsuario = require('./bddUsuario');
 const bddTurno = require('./bddTurno');
-const bddGestion = requiere('./bddGestion');
+const bddGestion = require('./bddGestion');
 
 async function verificarNuevoUsuario(ip, nuevoUsuario, nuevoPerfil) {
   const camposObligatorios = [
