@@ -127,6 +127,18 @@ async function modificarEspecialidad(datosEspecialidad) {
   }
 }
 
+async function buscarSeccionales(filtros) {
+  try {
+    const resultado = await bddGestion.buscarSeccionales(filtros);
+    return { valido: true, seccionales: resultado };
+  } catch (error) {
+    console.error('Error al consultar seccionales:', error);
+    return { valido: false, mensaje: 'Error al consultar seccionales' };
+  }
+}
+
+async function modificarSeccional(datosSeccional) {}
+
 module.exports = {
   verificarNuevoUsuario,
   verificarUsuario,
@@ -136,4 +148,6 @@ module.exports = {
   solicitarTurno,
   buscarEspecialidades,
   modificarEspecialidad,
+  buscarSeccionales,
+  modificarSeccional
 };

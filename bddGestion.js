@@ -8,7 +8,7 @@ const conexion = mysql.createPool({
   database: 'saludapp_bdd'
 });
 
-// Función para obtener disponibilidades con filtros opcionales
+//OBTENER ESPECIALIDADES
 async function buscarEspecialidades(filtros) {
   const { idEspecialidad, nombre, duracion } = filtros;
 
@@ -34,6 +34,7 @@ async function buscarEspecialidades(filtros) {
   return resultadoEspecialidades;
 }
 
+//MODIFICAR UNA ESPECIALIDAD
 async function modificarEspecialidad(datosEspecialidad) {
   const { idEspecialidad, nombre, duracion } = datosEspecialidad;
   const sql = `
@@ -55,6 +56,30 @@ async function modificarEspecialidad(datosEspecialidad) {
     throw error;
   }
 }
+
+//OBTENER SUCURSALES
+async function buscarSeccionales(filtros) {
+  const { idSeccional, nombre } = filtros;
+
+  let query = 'SELECT * FROM seccionales WHERE 1=1';
+  const params = [];
+
+  if (idSeccional !== undefined) {
+    query += ' AND idSeccional = ?';
+    params.push(idSeccional);
+  }
+  
+  if (nombre !== undefined) {
+    query += ' AND nombre = ?';
+    params.push(nombre);
+  }
+
+  const [resultadoSeccionales] = await conexion.query(query, params);
+  return resultadoSeccionales;
+}
+
+//MODIFICAR UNA SECCIONAL
+async function modificarSeccional(datosSeccional) {}
 
 //FUNCIONES GENERALES
 
@@ -82,4 +107,6 @@ async function auditarCambios(idUsuario, ip, cambio) {
 module.exports = {
   buscarEspecialidades,
   modificarEspecialidad,
+  buscarSeccionales,
+  modificarSeccional,
 };

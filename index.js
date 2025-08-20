@@ -127,3 +127,16 @@ app.post('/modificarEspecialidad', async (req, res) => {
   }
 });
 
+//BUSCAR SECCIONALES
+app.post('/buscarSeccionales', async (req, res) => {
+  const filtros = req.body;
+
+  const resultado = await control.buscarSeccionales(filtros);
+
+  if (resultado.valido) {
+    res.status(200).json(resultado.seccionales);
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});
+
