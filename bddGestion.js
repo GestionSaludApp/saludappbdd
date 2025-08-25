@@ -57,6 +57,33 @@ async function modificarEspecialidad(datosEspecialidad) {
   }
 }
 
+//INSERTAR UNA ESPECIALIDAD
+async function agregarEspecialidad(ip, idUsuario, nuevaEspecialidad) {
+  const sql = `
+    INSERT INTO especialidades (nombre, duracion)
+    VALUES (?, ?)
+  `;
+  const valores = [
+    nuevaEspecialidad.nombre,
+    nuevaEspecialidad.duracion
+  ];
+
+  const conx = await conexion.getConnection();
+  try {
+    const [resultadoEspecialidad] = await conx.query(sql, valores);
+    const idEspecialidad = resultadoEspecialidad.insertId;
+
+    auditarCambios(idUsuario, ip, 'Se agrego la especialidad: ' + idEspecialidad);
+
+    return resultadoEspecialidad;
+  } catch (err) {
+    console.error('Error al crear la especialidad: ', err.sqlMessage || err);
+    throw err;
+  } finally {
+    conx.release();
+  }
+}
+
 //OBTENER SUCURSALES
 async function buscarSeccionales(filtros) {
   const { idSeccional, nombre } = filtros;
@@ -80,6 +107,33 @@ async function buscarSeccionales(filtros) {
 
 //MODIFICAR UNA SECCIONAL
 async function modificarSeccional(datosSeccional) {}
+
+//INSERTAR UNA SECCIONAL FALTA AGREGAR DATOS
+async function agregarSeccional(ip, idUsuario, nuevaSeccional) {
+  const sql = `
+    INSERT INTO especialidades (nombre, duracion)
+    VALUES (?, ?)
+  `;
+  const valores = [
+    nuevaEspecialidad.nombre,
+    nuevaEspecialidad.duracion
+  ];
+
+  const conx = await conexion.getConnection();
+  try {
+    const [resultadoEspecialidad] = await conx.query(sql, valores);
+    const idEspecialidad = resultadoEspecialidad.insertId;
+
+    auditarCambios(idUsuario, ip, 'Se agrego la especialidad: ' + idEspecialidad);
+
+    return resultadoEspecialidad;
+  } catch (err) {
+    console.error('Error al crear la especialidad: ', err.sqlMessage || err);
+    throw err;
+  } finally {
+    conx.release();
+  }
+}
 
 //FUNCIONES GENERALES
 
@@ -105,8 +159,10 @@ async function auditarCambios(idUsuario, ip, cambio) {
 
 
 module.exports = {
+  agregarEspecialidad,
   buscarEspecialidades,
   modificarEspecialidad,
+  agregarSeccional,
   buscarSeccionales,
   modificarSeccional,
 };
