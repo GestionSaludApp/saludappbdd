@@ -196,13 +196,13 @@ async function obtenerPerfilRol(rol, idPerfil) {
   }
 }
 
-async function obtenerDisponibilidades(idPerfilProfesional) {
+async function obtenerDisponibilidades(idPerfil) {
   const conx = await conexion.getConnection();
 
   try {
     const [disponibilidades] = await conx.query(
-      'SELECT * FROM disponibilidades WHERE idPerfilProfesional = ?',
-      [idPerfilProfesional]
+      'SELECT * FROM disponibilidades WHERE idPerfil = ?',
+      [idPerfil]
     );
     return disponibilidades;
   } finally {

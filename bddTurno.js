@@ -58,14 +58,14 @@ async function obtenerTurnos({ idEspecialidad, idSeccional, diaSemana }) {
       const fechaStr = formatearFechaParaIdTurno(fecha); // 'ddmmyyyy'
 
       // 4. Generar ID del turno
-      const idTurno = `s${disp.idSeccional}p${disp.idPerfilProfesional}e${disp.idEspecialidad}d${fechaStr}h${hora}`;
+      const idTurno = `s${disp.idSeccional}p${disp.idPerfil}e${disp.idEspecialidad}d${fechaStr}h${hora}`;
 
       // 5. Verificar si existe en turnosActivos
       const disponible = await verificarDisponibilidadTurno(idTurno);
       if (disponible) {
         turnosDisponibles.push({
           idTurno,
-          idPerfilProfesional: disp.idPerfilProfesional,
+          idPerfil: disp.idPerfil,
           idEspecialidad: disp.idEspecialidad,
           idSeccional: disp.idSeccional,
           diaSemana: disp.diaSemana,
@@ -91,7 +91,7 @@ async function solicitarTurno(turno) {
   }
 
   const query = `
-      INSERT INTO turnosActivos 
+      INSERT INTO turnos
       (idTurno, idSeccional, idPerfilProfesional, idEspecialidad, diaSemana, horaInicio, horaFin, idPerfilPaciente)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
