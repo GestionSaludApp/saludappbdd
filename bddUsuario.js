@@ -52,46 +52,50 @@ async function agregarPerfilUsuario(conx, idUsuario, categoria, rol, alias) {
 }
 
 async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
-  const tablaDestino = (() => {
-    switch (nuevoPerfil.rol.toLowerCase()) {
-      case 'paciente': return 'perfilesPaciente';
-      case 'profesional': return 'perfilesProfesional';
-      case 'administrador': return 'perfilesAdministrador';
-      default: throw new Error('Tipo de usuario desconocido: ' + nuevoPerfil.rol);
-    }
-  })();
-
   const {
     nombre = 'nombre',
     apellido = 'apellido',
     dni = '00000000',
     fechaNacimiento = '1900-01-01',
     idEspecialidad = 0,
-    disponibilidad = []
+    disponibilidad = [],
+    rol = ''
   } = nuevoPerfil || {};
 
   let sqlDatos = '';
   let valoresDatos = [];
 
-  if (tablaDestino === 'perfilesProfesional') {
+  if (rol.toLowerCase() === 'profesional') {
     sqlDatos = `
-      INSERT INTO perfilesProfesional (idPerfil, idUsuario, idEspecialidad, nombre, apellido, dni, fechaNacimiento)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO perfiles (idPerfil, idPermisos, idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    valoresDatos = [idPerfil, idUsuario, idEspecialidad, nombre, apellido, dni, fechaNacimiento];
-    const [resultado] = await conexion.query(sqlDatos, valoresDatos);
-  } else {
-    sqlDatos = `
-      INSERT INTO ${tablaDestino} (idPerfil, idUsuario, nombre, apellido, dni, fechaNacimiento)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `;
-    valoresDatos = [idPerfil, idUsuario, nombre, apellido, dni, fechaNacimiento];
-    await conx.query(sqlDatos, valoresDatos);
+    valoresDatos = [idPerfil, 2, idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad];
+    const [resultado] = await conx.query(sqlDatos, valoresDatos);
   }
+
+  else if (rol.toLowerCase() === 'administrador') {
+  sqlDatos = `
+    INSERT INTO perfiles (idPerfil, idPermisos, idUsuario, nombre, apellido, dni, fechaNacimiento, idSeccional)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  valoresDatos = [idPerfil, 1, idUsuario, nombre, apellido, dni, fechaNacimiento, 0];
+  await conx.query(sqlDatos, valoresDatos);
+  }
+
+  else if (rol.toLowerCase() === 'paciente' || rol === '') {
+  sqlDatos = `
+    INSERT INTO perfiles (idPerfil, idPermisos, idUsuario, nombre, apellido, dni, fechaNacimiento)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+  `;
+  valoresDatos = [idPerfil, 3, idUsuario, nombre, apellido, dni, fechaNacimiento];
+  await conx.query(sqlDatos, valoresDatos);
+  }
+
   
-  if (tablaDestino === 'perfilesProfesional' && Array.isArray(disponibilidad)) {
+  if (rol.toLowerCase() === 'profesional' && Array.isArray(disponibilidad)) {
     const sqlDisp = `
-      INSERT INTO disponibilidades (idSeccional, idPerfilProfesional, idEspecialidad, diaSemana, horaInicio, horaFin)
+      INSERT INTO disponibilidades (idSeccional, idPerfil, idEspecialidad, diaSemana, horaInicio, horaFin)
       VALUES (?, ?, ?, ?, ?, ?)
     `;
 
@@ -177,28 +181,13 @@ async function obtenerPerfilRol(rol, idPerfil) {
   const conx = await conexion.getConnection();
 
   try {
-    let tabla;
-    switch (rol) {
-      case 'paciente':
-        tabla = 'perfilesPaciente';
-        break;
-      case 'profesional':
-        tabla = 'perfilesProfesional';
-        break;
-      case 'administrador':
-        tabla = 'perfilesAdministrador';
-        break;
-      default:
-        throw new Error('Tipo de usuario desconocido');
-    }
-
     const [resultadoPerfilRol] = await conx.query(
-      `SELECT * FROM ${tabla} WHERE idPerfil = ?`,
+      `SELECT * FROM perfiles WHERE idPerfil = ?`,
       [idPerfil]
     );
 
     if (resultadoPerfilRol.length === 0) {
-      throw new Error(`No se encontró el perfil en la tabla ${tabla}`);
+      throw new Error(`No se encontró el perfil en la tabla perfiles`);
     }
 
     return {...resultadoPerfilRol[0],};
