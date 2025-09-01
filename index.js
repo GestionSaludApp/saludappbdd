@@ -1,10 +1,15 @@
 const express = require('express');
 const control = require('./control.js');
 const cors = require('cors');
+const fileUpload = require('express-fileupload');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(fileUpload({
+  useTempFiles: true,
+  tempFileDir: '/tmp/'
+}));
 
 //HABILITAR EL PUERTO
 app.listen(process.env.PORT || 3000, () => {
@@ -15,8 +20,17 @@ app.listen(process.env.PORT || 3000, () => {
 app.post('/registrarUsuario', async (req, res) => {
   try {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const { nuevoUsuario, nuevoPerfil } = req.body;
-    
+
+    // Parsear los JSON stringificados
+    const nuevoUsuario = JSON.parse(req.body.nuevoUsuario);
+    const nuevoPerfil = JSON.parse(req.body.nuevoPerfil);
+
+    // Recuperar la imagen
+    const imagen = req.files?.imagen || null;
+    if (imagen) {
+      nuevoPerfil.imagen = imagen;
+    }
+
     const resultado = await control.verificarNuevoUsuario(ip, nuevoUsuario, nuevoPerfil);
 
     if (!resultado.valido) {
@@ -29,6 +43,30 @@ app.post('/registrarUsuario', async (req, res) => {
     res.status(500).json({ mensaje: 'Error interno del servidor' });
   }
 });
+
+/*
+app.post('/registrarUsuario', async (req, res) => {
+  try {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const { nuevoUsuario, nuevoPerfil } = req.body;
+
+    //Recuperar la imagen desde files
+    const imagen = req.files?.imagen || null;
+    if (imagen) {nuevoPerfil.imagen = imagen;}
+
+    const resultado = await control.verificarNuevoUsuario(ip, nuevoUsuario, nuevoPerfil);
+
+    if (!resultado.valido) {
+      return res.status(400).json({ mensaje: resultado.mensaje });
+    }
+
+    res.status(200).json({ mensaje: 'Usuario registrado correctamente', resultado: resultado.resultado });
+  } catch (err) {
+    console.error('Error interno en /registrarUsuario:', err);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+});
+*/
 
 //AGREGAR UN NUEVO PERFIL A UN USUARIO EXISTENTE
 app.post('/registrarPerfilAdicional', async (req, res) => {

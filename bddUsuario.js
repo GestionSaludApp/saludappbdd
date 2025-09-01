@@ -1,4 +1,8 @@
 const mysql = require('mysql2/promise');
+const cloudinary = require('cloudinary').v2;
+const nombreRepositorioImagenes = 'daot4w6wn';
+const prefijoImagen = 'https://res.cloudinary.com/' + nombreRepositorioImagenes + '/image/upload/';
+const imagenGenerica = 'v1756689218/perfiles/s5gvajgadqovcyole97s.jpg';
 
 // Configuración
 const conexion = mysql.createPool({
@@ -6,6 +10,11 @@ const conexion = mysql.createPool({
   user: 'saludapp_admin',
   password: 'Practica3!',
   database: 'saludapp_bdd'
+});
+cloudinary.config({
+  cloud_name: nombreRepositorioImagenes,
+  api_key: '576566524786653',
+  api_secret: 'i5Zis5pawFJdFpyHFKHMi60T3GQ',
 });
 
 //FUNCIONES PARA EL REGISTRO
@@ -62,33 +71,37 @@ async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
     rol = ''
   } = nuevoPerfil || {};
 
+  if (nuevoPerfil.imagen) {
+    var imagen = await guardarImagen(nuevoPerfil.imagen);
+  } else {imagen = imagenGenerica};
+  
   let sqlDatos = '';
   let valoresDatos = [];
 
   if (rol.toLowerCase() === 'profesional') {
     sqlDatos = `
-      INSERT INTO perfiles (idPerfil, idPermisos, idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO perfiles (idPerfil, idPermisos, idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad, imagen)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
-    valoresDatos = [idPerfil, 2, idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad];
+    valoresDatos = [idPerfil, 2, idUsuario, nombre, apellido, dni, fechaNacimiento, idEspecialidad, imagen];
     const [resultado] = await conx.query(sqlDatos, valoresDatos);
   }
 
   else if (rol.toLowerCase() === 'administrador') {
   sqlDatos = `
-    INSERT INTO perfiles (idPerfil, idPermisos, idUsuario, nombre, apellido, dni, fechaNacimiento, idSeccional)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO perfiles (idPerfil, idPermisos, idUsuario, nombre, apellido, dni, fechaNacimiento, idSeccional, imagen)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
-  valoresDatos = [idPerfil, 1, idUsuario, nombre, apellido, dni, fechaNacimiento, 0];
+  valoresDatos = [idPerfil, 1, idUsuario, nombre, apellido, dni, fechaNacimiento, 0, imagen];
   await conx.query(sqlDatos, valoresDatos);
   }
 
   else if (rol.toLowerCase() === 'paciente' || rol === '') {
   sqlDatos = `
-    INSERT INTO perfiles (idPerfil, idPermisos, idUsuario, nombre, apellido, dni, fechaNacimiento)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO perfiles (idPerfil, idPermisos, idUsuario, nombre, apellido, dni, fechaNacimiento, imagen)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
-  valoresDatos = [idPerfil, 3, idUsuario, nombre, apellido, dni, fechaNacimiento];
+  valoresDatos = [idPerfil, 3, idUsuario, nombre, apellido, dni, fechaNacimiento, imagen];
   await conx.query(sqlDatos, valoresDatos);
   }
 
@@ -229,6 +242,25 @@ async function obtenerPerfiles(idUsuario, categoria = null) {
   }
 }
 
+async function guardarImagen(archivo) {
+  try {
+    const result = await cloudinary.uploader.upload(archivo.tempFilePath, {
+      folder: 'perfiles'
+    });
+
+    let ruta = result.secure_url;
+
+    if (ruta.startsWith(prefijoImagen)) {
+      ruta = ruta.substring(prefijoImagen.length);
+    }
+
+    return ruta;
+
+  } catch (err) {
+    console.error('Error al subir la imagen:', err);
+    throw err;
+  }
+}
 
 //FUNCIONES GENERALES
 

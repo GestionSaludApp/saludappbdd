@@ -132,6 +132,24 @@ async function obtenerPerfilesPorEspecialidad(idEspecialidad) {
   return resultado.map(resultado => resultado.idPerfil);
 }
 
+//GESTIONAR HISTORIAS CLINICAS
+async function escribirInforme(idPaciente, idProfesional, informe, imagen){
+  fecha = obtenerFechaFormateada();
+  const sql = `
+    INSERT INTO historiasClinicas (idPerfilPaciente, idPerfilProfesional, fecha, informe, imagen)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+  const valores = [idPaciente, idProfesional, fecha, informe, imagen];
+  const [resultado] = await conx.query(sql, valores);
+  return resultado.insertId;
+}
+
+async function agregarPerfilUsuario(conx, idUsuario, categoria, rol, alias) {
+  
+
+  return resultadoPerfilUsuario.insertId;
+}
+
 //FUNCIONES GENERALES
 
 async function auditarCambios(idUsuario, ip, cambio) {
@@ -187,7 +205,9 @@ function formatearFechaParaIdTurno(fecha) {
 }
 
 module.exports = {
+  escribirInforme,
   obtenerDisponibilidades,
+  obtenerPerfilesPorEspecialidad,
   obtenerTurnos,
   solicitarTurno
 };
