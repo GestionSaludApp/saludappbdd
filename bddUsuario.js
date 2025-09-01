@@ -1,10 +1,14 @@
 const mysql = require('mysql2/promise');
 const cloudinary = require('cloudinary').v2;
-const nombreRepositorioImagenes = 'daot4w6wn';
+
+import { credenciales } from './credenciales.js';
+
+const nombreRepositorioImagenes = credenciales.cloudinary.cloud_name;
 const prefijoImagen = 'https://res.cloudinary.com/' + nombreRepositorioImagenes + '/image/upload/';
 const imagenGenerica = 'v1756689218/perfiles/s5gvajgadqovcyole97s.jpg';
 
 // Configuración
+/*
 const conexion = mysql.createPool({
   host: 'mysql.db.mdbgo.com',
   user: 'saludapp_admin',
@@ -16,6 +20,10 @@ cloudinary.config({
   api_key: '576566524786653',
   api_secret: 'i5Zis5pawFJdFpyHFKHMi60T3GQ',
 });
+*/
+
+const conexion = mysql.createPool(credenciales.mysql);
+cloudinary.config(credenciales.cloudinary);
 
 //FUNCIONES PARA EL REGISTRO
 async function registrarUsuario(ip, nuevoUsuario, nuevoPerfil) {
