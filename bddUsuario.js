@@ -1,7 +1,7 @@
 const mysql = require('mysql2/promise');
 const cloudinary = require('cloudinary').v2;
 
-import { credenciales } from './credenciales.js';
+const { credenciales } = require("./credenciales.js");
 
 const nombreRepositorioImagenes = credenciales.cloudinary.cloud_name;
 const prefijoImagen = 'https://res.cloudinary.com/' + nombreRepositorioImagenes + '/image/upload/';
