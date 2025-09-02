@@ -161,7 +161,7 @@ async function agregarSeccional(ip, idUsuario, nuevaSeccional) {
   `;
   const valores = [
     nuevaSeccional.nombre,
-    nuevaSeccional.duracion,
+    nuevaSeccional.direccion,
     nuevaSeccional.ciudad,
     nuevaSeccional.provincia,
     nuevaSeccional.telefono,
@@ -203,6 +203,21 @@ async function auditarCambios(idUsuario, ip, cambio) {
   } finally {
     conx.release();
   }
+}
+function obtenerFechaFormateada() {
+  const ahora = new Date();
+
+  //Ajustar 3 horas para Argentina (GMT-3)
+  ahora.setHours(ahora.getHours() - 3);
+
+  const dia = String(ahora.getDate()).padStart(2, '0');
+  const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+  const anio = ahora.getFullYear();
+
+  const horas = String(ahora.getHours()).padStart(2, '0');
+  const minutos = String(ahora.getMinutes()).padStart(2, '0');
+
+  return `${dia}/${mes}/${anio}, ${horas}:${minutos}`;
 }
 
 module.exports = {
