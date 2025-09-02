@@ -44,30 +44,6 @@ app.post('/registrarUsuario', async (req, res) => {
   }
 });
 
-/*
-app.post('/registrarUsuario', async (req, res) => {
-  try {
-    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
-    const { nuevoUsuario, nuevoPerfil } = req.body;
-
-    //Recuperar la imagen desde files
-    const imagen = req.files?.imagen || null;
-    if (imagen) {nuevoPerfil.imagen = imagen;}
-
-    const resultado = await control.verificarNuevoUsuario(ip, nuevoUsuario, nuevoPerfil);
-
-    if (!resultado.valido) {
-      return res.status(400).json({ mensaje: resultado.mensaje });
-    }
-
-    res.status(200).json({ mensaje: 'Usuario registrado correctamente', resultado: resultado.resultado });
-  } catch (err) {
-    console.error('Error interno en /registrarUsuario:', err);
-    res.status(500).json({ mensaje: 'Error interno del servidor' });
-  }
-});
-*/
-
 //AGREGAR UN NUEVO PERFIL A UN USUARIO EXISTENTE
 app.post('/registrarPerfilAdicional', async (req, res) => {
   try {
@@ -141,6 +117,25 @@ app.post('/solicitarTurno', async (req, res) => {
   }
 });
 
+//AGREGAR ESPECIALIDADES
+app.post('/agregarEspecialidad', async (req, res) => {
+  try {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const { idUsuario, nuevaEspecialidad } = req.body;
+    
+    const resultado = await control.agregarEspecialidad(ip, idUsuario, nuevaEspecialidad);
+
+    if (!resultado.valido) {
+      return res.status(400).json({ mensaje: resultado.mensaje });
+    }
+
+    res.status(200).json({ mensaje: 'Especialidad registrada correctamente', resultado: resultado.resultado });
+  } catch (err) {
+    console.error('Error interno en agregar especialidades:', err);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+});
+
 //BUSCAR ESPECIALIDADES
 app.post('/buscarEspecialidades', async (req, res) => {
   const filtros = req.body;
@@ -165,6 +160,25 @@ app.post('/modificarEspecialidad', async (req, res) => {
   }
 });
 
+//AGREGAR SECCIONALES
+app.post('/agregarSeccional', async (req, res) => {
+  try {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const { idUsuario, nuevaSeccional } = req.body;
+    
+    const resultado = await control.agregarSeccional(ip, idUsuario, nuevaSeccional);
+
+    if (!resultado.valido) {
+      return res.status(400).json({ mensaje: resultado.mensaje });
+    }
+
+    res.status(200).json({ mensaje: 'Seccional registrada correctamente', resultado: resultado.resultado });
+  } catch (err) {
+    console.error('Error interno en agregar seccionales:', err);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+});
+
 //BUSCAR SECCIONALES
 app.post('/buscarSeccionales', async (req, res) => {
   const filtros = req.body;
@@ -175,6 +189,17 @@ app.post('/buscarSeccionales', async (req, res) => {
     res.status(200).json(resultado.seccionales);
   } else {
     res.status(400).json({ error: resultado.mensaje });
+  }
+});
+
+//MODIFICAR SECCIONALES
+app.post('/modificarSeccional', async (req, res) => {
+  const datosSeccional = req.body;
+  const resultado = await control.modificarSeccional(datosSeccional);
+  if (resultado.valido) {
+    res.status(200).json(exito);
+  } else {
+    res.status(400).json({error: resultado.mensaje})
   }
 });
 

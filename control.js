@@ -101,6 +101,29 @@ async function solicitarTurno(turno) {
   }
 }
 
+async function agregarEspecialidad(ip, idUsuario, nuevaEspecialidad){
+  const camposObligatorios = [
+    'nombre',
+    'duracion'
+  ];
+
+  const faltantes = camposObligatorios.filter(campo => {
+    return nuevaEspecialidad[campo] === undefined || nuevaEspecialidad[campo] === null || nuevaEspecialidad[campo] === '';
+  });
+
+  if (faltantes.length > 0) {
+    return { valido: false, mensaje: `Faltan campos: ${faltantes.join(', ')}` };
+  }
+
+  try {
+    const resultado = await bddGestion.agregarEspecialidad(ip, idUsuario, nuevaEspecialidad);
+    return { valido: true, resultado };
+  } catch (error) {
+    console.error('Error al registrar en la base de datos:', error);
+    return { valido: false, mensaje: 'Error al registrar en la base de datos' };
+  }
+}
+
 async function buscarEspecialidades(filtros) {
   try {
     const resultado = await bddGestion.buscarEspecialidades(filtros);
@@ -127,6 +150,28 @@ async function modificarEspecialidad(datosEspecialidad) {
   }
 }
 
+async function agregarSeccional(ip, idUsuario, nuevaSeccional){
+  const camposObligatorios = [
+    'nombre'
+  ];
+
+  const faltantes = camposObligatorios.filter(campo => {
+    return nuevaSeccional[campo] === undefined || nuevaSeccional[campo] === null || nuevaSeccional[campo] === '';
+  });
+
+  if (faltantes.length > 0) {
+    return { valido: false, mensaje: `Faltan campos: ${faltantes.join(', ')}` };
+  }
+
+  try {
+    const resultado = await bddGestion.agregarSeccional(ip, idUsuario, nuevaSeccional);
+    return { valido: true, resultado };
+  } catch (error) {
+    console.error('Error al registrar en la base de datos:', error);
+    return { valido: false, mensaje: 'Error al registrar en la base de datos' };
+  }
+}
+
 async function buscarSeccionales(filtros) {
   try {
     const resultado = await bddGestion.buscarSeccionales(filtros);
@@ -137,7 +182,21 @@ async function buscarSeccionales(filtros) {
   }
 }
 
-async function modificarSeccional(datosSeccional) {}
+async function modificarSeccional(datosSeccional) {
+  const { idSeccional, nombre, direccion, ciudad, provincia, telefono, email } = datosEspecialidad;
+
+  if (!idSeccional || !nombre || !direccion || !ciudad || !provincia || !telefono || !email) {
+    throw new Error("Faltan datos para actualizar la seccional.");
+  }
+
+  try {
+    const resultado = await bddGestion.modificarSeccional(datosSeccional);
+    return { valido: true, seccional: resultado };
+  } catch (error) {
+    console.error('Error al modificar la seccional: ', error);
+    return { valido: false, mensaje: 'Error al modificar la seccional' };
+  }
+}
 
 module.exports = {
   verificarNuevoUsuario,
@@ -146,8 +205,10 @@ module.exports = {
   buscarDisponibilidades,
   buscarTurnos,
   solicitarTurno,
+  agregarEspecialidad,
   buscarEspecialidades,
   modificarEspecialidad,
+  agregarSeccional,
   buscarSeccionales,
   modificarSeccional
 };

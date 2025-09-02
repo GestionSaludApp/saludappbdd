@@ -5,22 +5,6 @@ const { credenciales } = require("./credenciales.js");
 
 const nombreRepositorioImagenes = credenciales.cloudinary.cloud_name;
 const prefijoImagen = 'https://res.cloudinary.com/' + nombreRepositorioImagenes + '/image/upload/';
-const imagenGenerica = 'v1756689218/perfiles/s5gvajgadqovcyole97s.jpg';
-
-// Configuración
-/*
-const conexion = mysql.createPool({
-  host: 'mysql.db.mdbgo.com',
-  user: 'saludapp_admin',
-  password: 'Practica3!',
-  database: 'saludapp_bdd'
-});
-cloudinary.config({
-  cloud_name: nombreRepositorioImagenes,
-  api_key: '576566524786653',
-  api_secret: 'i5Zis5pawFJdFpyHFKHMi60T3GQ',
-});
-*/
 
 const conexion = mysql.createPool(credenciales.mysql);
 cloudinary.config(credenciales.cloudinary);
@@ -81,7 +65,7 @@ async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
 
   if (nuevoPerfil.imagen) {
     var imagen = await guardarImagen(nuevoPerfil.imagen);
-  } else {imagen = imagenGenerica};
+  }
   
   let sqlDatos = '';
   let valoresDatos = [];
@@ -211,6 +195,12 @@ async function obtenerPerfilRol(rol, idPerfil) {
       throw new Error(`No se encontró el perfil en la tabla perfiles`);
     }
 
+    resultadoPerfilRol.forEach(p => {
+      if (p.imagen) {
+        p.imagen = prefijoImagen + p.imagen;
+      }
+    });
+
     return {...resultadoPerfilRol[0],};
   } finally {
     conx.release();
@@ -244,6 +234,13 @@ async function obtenerPerfiles(idUsuario, categoria = null) {
     }
 
     const [perfiles] = await conx.query(query, params);
+
+    perfiles.forEach(p => {
+      if (p.imagen) {
+        p.imagen = prefijoImagen + p.imagen;
+      }
+    });
+
     return perfiles;
   } finally {
     conx.release();

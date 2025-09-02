@@ -73,7 +73,7 @@ async function agregarEspecialidad(ip, idUsuario, nuevaEspecialidad) {
     const [resultadoEspecialidad] = await conx.query(sql, valores);
     const idEspecialidad = resultadoEspecialidad.insertId;
 
-    auditarCambios(idUsuario, ip, 'Se agrego la especialidad: ' + idEspecialidad);
+    auditarCambios(idUsuario, ip, 'Se agrego la especialidad: ' + idEspecialidad + nuevaEspecialidad.nombre);
 
     return resultadoEspecialidad;
   } catch (err) {
@@ -86,7 +86,7 @@ async function agregarEspecialidad(ip, idUsuario, nuevaEspecialidad) {
 
 //OBTENER SUCURSALES
 async function buscarSeccionales(filtros) {
-  const { idSeccional, nombre } = filtros;
+  const { idSeccional, nombre, direccion, ciudad, provincia, telefono, email } = filtros;
 
   let query = 'SELECT * FROM seccionales WHERE 1=1';
   const params = [];
@@ -101,34 +101,83 @@ async function buscarSeccionales(filtros) {
     params.push(nombre);
   }
 
+  if (direccion !== undefined) {
+    query += ' AND direccion = ?';
+    params.push(direccion);
+  }
+
+  if (ciudad !== undefined) {
+    query += ' AND ciudad = ?';
+    params.push(ciudad);
+  }
+
+  if (provincia !== undefined) {
+    query += ' AND provincia = ?';
+    params.push(provincia);
+  }
+
+  if (telefono !== undefined) {
+    query += ' AND telefono = ?';
+    params.push(telefono);
+  }
+
+  if (email !== undefined) {
+    query += ' AND email = ?';
+    params.push(email);
+  }
+
   const [resultadoSeccionales] = await conexion.query(query, params);
   return resultadoSeccionales;
 }
 
 //MODIFICAR UNA SECCIONAL
-async function modificarSeccional(datosSeccional) {}
+async function modificarSeccional(datosSeccional) {
+  const { idSeccional, nombre, direccion, ciudad, provincia, telefono, email } = datosSeccional;
+  const sql = `
+    UPDATE seccionales
+    SET nombre = ?, direccion = ?, ciudad = ?, provincia = ?, telefono = ?, email = ?
+    WHERE idSeccional = ?
+  `;
+
+  try {
+    const [resultado] = await conexion.execute(sql, [nombre, direccion, ciudad, provincia, telefono, email, idSeccional]);
+
+    if (resultado.affectedRows === 0) {
+      throw new Error("No se encontró la seccional para actualizar.");
+    }
+
+    return { exito: true, mensaje: "Seccional actualizada correctamente." };
+  } catch (error) {
+    console.error("Error al actualizar seccional:", error.message);
+    throw error;
+  }
+}
 
 //INSERTAR UNA SECCIONAL FALTA AGREGAR DATOS
 async function agregarSeccional(ip, idUsuario, nuevaSeccional) {
   const sql = `
-    INSERT INTO especialidades (nombre, duracion)
-    VALUES (?, ?)
+    INSERT INTO seccionales (nombre, direccion, ciudad, provincia, telefono, email)
+    VALUES (?, ?, ?, ?, ?, ?)
   `;
   const valores = [
-    nuevaEspecialidad.nombre,
-    nuevaEspecialidad.duracion
+    nuevaSeccional.nombre,
+    nuevaSeccional.duracion,
+    nuevaSeccional.ciudad,
+    nuevaSeccional.provincia,
+    nuevaSeccional.telefono,
+    nuevaSeccional.email
   ];
 
   const conx = await conexion.getConnection();
   try {
-    const [resultadoEspecialidad] = await conx.query(sql, valores);
-    const idEspecialidad = resultadoEspecialidad.insertId;
+    const [resultadoSeccional] = await conx.query(sql, valores);
+    const idSeccional = resultadoSeccional.insertId;
 
-    auditarCambios(idUsuario, ip, 'Se agrego la especialidad: ' + idEspecialidad);
+    auditarCambios(idUsuario, ip, 'Se agrego la seccional: ' + idSeccional + nuevaSeccional.nombre);
 
-    return resultadoEspecialidad;
+    return resultadoSeccional;
   } catch (err) {
-    console.error('Error al crear la especialidad: ', err.sqlMessage || err);
+    console.error('Error al crear la seccional: ', err.sqlMessage || err);
     throw err;
   } finally {
     conx.release();
@@ -136,7 +185,6 @@ async function agregarSeccional(ip, idUsuario, nuevaSeccional) {
 }
 
 //FUNCIONES GENERALES
-
 async function auditarCambios(idUsuario, ip, cambio) {
   const conx = await conexion.getConnection();
   const fecha = obtenerFechaFormateada();
@@ -156,7 +204,6 @@ async function auditarCambios(idUsuario, ip, cambio) {
     conx.release();
   }
 }
-
 
 module.exports = {
   agregarEspecialidad,
