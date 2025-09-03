@@ -3,6 +3,15 @@ const cloudinary = require('cloudinary').v2;
 
 const { credenciales } = require("./credenciales.js");
 
+const nodemailer = require("nodemailer");
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: credenciales.email.usuario,
+    pass: credenciales.email.password
+  }
+});
+
 const nombreRepositorioImagenes = credenciales.cloudinary.cloud_name;
 const prefijoImagen = 'https://res.cloudinary.com/' + nombreRepositorioImagenes + '/image/upload/';
 
@@ -32,6 +41,12 @@ async function registrarUsuario(ip, nuevoUsuario, nuevoPerfil) {
     const idPerfil = await agregarPerfilUsuario(conx, idUsuario, nuevoPerfil.categoria, nuevoPerfil.rol, nuevoPerfil.alias);
 
     await registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil);
+
+    enviarMail(
+      nuevoUsuario.email,
+      'Bienvenido ' + nuevoPerfil.nombre + ' a SaludApp',
+      'Se ha registrado exitosamente en SaludApp utilizando el email: ' + nuevoUsuario.email
+    );
 
     return resultadoUsuario;
   } catch (err) {
@@ -324,6 +339,24 @@ function obtenerFechaFormateada() {
   const minutos = String(ahora.getMinutes()).padStart(2, '0');
 
   return `${dia}/${mes}/${anio}, ${horas}:${minutos}`;
+}
+
+async function enviarMail(destinatario, asunto, mensaje) {
+  try {
+    const info = await transporter.sendMail({
+      from: `"SaludApp" <${credenciales.email.user}>`,
+      to: destinatario,
+      subject: asunto,
+      text: mensaje,
+      html: `<p>${mensaje}</p>`
+    });
+
+    console.log("Mensaje enviado: %s", info.messageId);
+    return true;
+  } catch (error) {
+    console.error("Error enviando email:", error);
+    return false;
+  }
 }
 
 module.exports = {
