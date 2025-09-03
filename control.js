@@ -150,6 +150,30 @@ async function modificarEspecialidad(datosEspecialidad) {
   }
 }
 
+async function eliminarEspecialidad(ip, idUsuario, datosEspecialidad){
+  const camposObligatorios = [
+    'idEspecialidad',
+    'nombre',
+    'duracion'
+  ];
+
+  const faltantes = camposObligatorios.filter(campo => {
+    return datosEspecialidad[campo] === undefined || datosEspecialidad[campo] === null || datosEspecialidad[campo] === '';
+  });
+
+  if (faltantes.length > 0) {
+    return { valido: false, mensaje: `Faltan campos: ${faltantes.join(', ')}` };
+  }
+
+  try {
+    const resultado = await bddGestion.eliminarEspecialidad(ip, idUsuario, datosEspecialidad);
+    return { valido: true, resultado };
+  } catch (error) {
+    console.error('Error al eliminar el registro de la base de datos:', error);
+    return { valido: false, mensaje: 'Error al eliminar de la base de datos' };
+  }
+}
+
 async function agregarSeccional(ip, idUsuario, nuevaSeccional){
   const camposObligatorios = [
     'nombre'
@@ -198,6 +222,33 @@ async function modificarSeccional(datosSeccional) {
   }
 }
 
+async function eliminarSeccional(ip, idUsuario, datosSeccional) {
+  const camposObligatorios = [
+    'idSeccional',
+    'nombre',
+    'ciudad',
+    'provincia'
+  ];
+
+  const faltantes = camposObligatorios.filter(campo => {
+    return datosSeccional[campo] === undefined || 
+           datosSeccional[campo] === null || 
+           datosSeccional[campo] === '';
+  });
+
+  if (faltantes.length > 0) {
+    return { valido: false, mensaje: `Faltan campos: ${faltantes.join(', ')}` };
+  }
+
+  try {
+    const resultado = await bddGestion.eliminarSeccional(ip, idUsuario, datosSeccional);
+    return { valido: true, resultado };
+  } catch (error) {
+    console.error('Error al eliminar la seccional de la base de datos:', error);
+    return { valido: false, mensaje: 'Error al eliminar de la base de datos' };
+  }
+}
+
 module.exports = {
   verificarNuevoUsuario,
   verificarUsuario,
@@ -208,7 +259,9 @@ module.exports = {
   agregarEspecialidad,
   buscarEspecialidades,
   modificarEspecialidad,
+  eliminarEspecialidad,
   agregarSeccional,
   buscarSeccionales,
-  modificarSeccional
+  modificarSeccional,
+  eliminarSeccional
 };

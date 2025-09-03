@@ -160,6 +160,25 @@ app.post('/modificarEspecialidad', async (req, res) => {
   }
 });
 
+//ELIMINAR ESPECIALIDADES
+app.post('/eliminarEspecialidad', async (req, res) => {
+  try {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const { idUsuario, datosEspecialidad } = req.body;
+    
+    const resultado = await control.eliminarEspecialidad(ip, idUsuario, datosEspecialidad);
+
+    if (!resultado.valido) {
+      return res.status(400).json({ mensaje: resultado.mensaje });
+    }
+
+    res.status(200).json({ mensaje: 'Especialidad eliminada correctamente', resultado: resultado.resultado });
+  } catch (err) {
+    console.error('Error interno al eliminar especialidades:', err);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+});
+
 //AGREGAR SECCIONALES
 app.post('/agregarSeccional', async (req, res) => {
   try {
@@ -203,3 +222,21 @@ app.post('/modificarSeccional', async (req, res) => {
   }
 });
 
+// ELIMINAR SECCIONALES
+app.post('/eliminarSeccional', async (req, res) => {
+  try {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const { idUsuario, datosSeccional } = req.body;
+
+    const resultado = await control.eliminarSeccional(ip, idUsuario, datosSeccional);
+
+    if (!resultado.valido) {
+      return res.status(400).json({ mensaje: resultado.mensaje });
+    }
+
+    res.status(200).json({ mensaje: 'Seccional eliminada correctamente', resultado: resultado.resultado });
+  } catch (err) {
+    console.error('Error interno al eliminar seccionales:', err);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+});

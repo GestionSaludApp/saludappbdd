@@ -1,12 +1,7 @@
 const mysql = require('mysql2/promise');
 
-// Configuración
-const conexion = mysql.createPool({
-  host: 'mysql.db.mdbgo.com',
-  user: 'saludapp_admin',
-  password: 'Practica3!',
-  database: 'saludapp_bdd'
-});
+const { credenciales } = require("./credenciales.js");
+const conexion = mysql.createPool(credenciales.mysql);
 
 // Función para obtener disponibilidades con filtros opcionales
 async function obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana }) {

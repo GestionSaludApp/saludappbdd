@@ -1,12 +1,7 @@
 const mysql = require('mysql2/promise');
 
-// Configuración
-const conexion = mysql.createPool({
-  host: 'mysql.db.mdbgo.com',
-  user: 'saludapp_admin',
-  password: 'Practica3!',
-  database: 'saludapp_bdd'
-});
+const { credenciales } = require("./credenciales.js");
+const conexion = mysql.createPool(credenciales.mysql);
 
 //OBTENER ESPECIALIDADES
 async function buscarEspecialidades(filtros) {
@@ -50,6 +45,7 @@ async function modificarEspecialidad(datosEspecialidad) {
       throw new Error("No se encontró la especialidad para actualizar.");
     }
 
+    auditarCambios(idUsuario, ip, 'Se modificó la especialidad: ' + idEspecialidad + datosEspecialidad);
     return { exito: true, mensaje: "Especialidad actualizada correctamente." };
   } catch (error) {
     console.error("Error al actualizar especialidad:", error.message);
@@ -81,6 +77,30 @@ async function agregarEspecialidad(ip, idUsuario, nuevaEspecialidad) {
     throw err;
   } finally {
     conx.release();
+  }
+}
+
+//ELIMINAR UNA ESPECIALIDAD
+async function eliminarEspecialidad(ip, idUsuario, datosEspecialidad) {
+  const { idEspecialidad, nombre, duracion } = datosEspecialidad;
+
+  const sql = `
+    DELETE FROM especialidades
+    WHERE idEspecialidad = ? AND nombre = ? AND duracion = ?
+  `;
+
+  try {
+    const [resultado] = await conexion.execute(sql, [idEspecialidad, nombre, duracion]);
+
+    if (resultado.affectedRows === 0) {
+      throw new Error("No se encontró la especialidad con los datos indicados para eliminar.");
+    }
+
+    auditarCambios(idUsuario, ip, 'Se eliminó la especialidad: ' + idEspecialidad + ' - ' + datosEspecialidad.nombre);
+    return { exito: true, mensaje: "Especialidad eliminada correctamente." };
+  } catch (error) {
+    console.error("Error al eliminar especialidad:", error.message);
+    throw error;
   }
 }
 
@@ -153,7 +173,7 @@ async function modificarSeccional(datosSeccional) {
   }
 }
 
-//INSERTAR UNA SECCIONAL FALTA AGREGAR DATOS
+//INSERTAR UNA SECCIONAL
 async function agregarSeccional(ip, idUsuario, nuevaSeccional) {
   const sql = `
     INSERT INTO seccionales (nombre, direccion, ciudad, provincia, telefono, email)
@@ -181,6 +201,30 @@ async function agregarSeccional(ip, idUsuario, nuevaSeccional) {
     throw err;
   } finally {
     conx.release();
+  }
+}
+
+//ELIMINAR UNA SECCIONAL
+async function eliminarSeccional(ip, idUsuario, datosSeccional) {
+  const { idSeccional, nombre, ciudad, provincia } = datosSeccional;
+
+  const sql = `
+    DELETE FROM seccionales
+    WHERE idSeccional = ? AND nombre = ? AND ciudad = ? AND provincia = ?
+  `;
+
+  try {
+    const [resultado] = await conexion.execute(sql, [idSeccional, nombre, ciudad, provincia]);
+
+    if (resultado.affectedRows === 0) {
+      throw new Error("No se encontró la seccional con los datos indicados para eliminar.");
+    }
+
+    auditarCambios(idUsuario, ip, 'Se eliminó la seccional: ' + idSeccional + ' - ' + nombre);
+    return { exito: true, mensaje: "Seccional eliminada correctamente." };
+  } catch (error) {
+    console.error("Error al eliminar seccional:", error.message);
+    throw error;
   }
 }
 
@@ -224,7 +268,9 @@ module.exports = {
   agregarEspecialidad,
   buscarEspecialidades,
   modificarEspecialidad,
+  eliminarEspecialidad,
   agregarSeccional,
   buscarSeccionales,
   modificarSeccional,
+  eliminarSeccional
 };
