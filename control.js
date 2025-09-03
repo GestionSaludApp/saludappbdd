@@ -134,7 +134,7 @@ async function buscarEspecialidades(filtros) {
   }
 }
 
-async function modificarEspecialidad(datosEspecialidad) {
+async function editarEspecialidad(ip, idUsuario, datosEspecialidad) {
   const { idEspecialidad, nombre, duracion } = datosEspecialidad;
 
   if (!idEspecialidad || !nombre || duracion == null) {
@@ -142,7 +142,7 @@ async function modificarEspecialidad(datosEspecialidad) {
   }
 
   try {
-    const resultado = await bddGestion.modificarEspecialidad(datosEspecialidad);
+    const resultado = await bddGestion.editarEspecialidad(ip, idUsuario, datosEspecialidad);
     return { valido: true, especialidad: resultado };
   } catch (error) {
     console.error('Error al modificar la especialidad: ', error);
@@ -258,7 +258,7 @@ module.exports = {
   solicitarTurno,
   agregarEspecialidad,
   buscarEspecialidades,
-  modificarEspecialidad,
+  editarEspecialidad,
   eliminarEspecialidad,
   agregarSeccional,
   buscarSeccionales,

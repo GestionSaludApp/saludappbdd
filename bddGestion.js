@@ -30,7 +30,7 @@ async function buscarEspecialidades(filtros) {
 }
 
 //MODIFICAR UNA ESPECIALIDAD
-async function modificarEspecialidad(datosEspecialidad) {
+async function editarEspecialidad(ip, idUsuario, datosEspecialidad) {
   const { idEspecialidad, nombre, duracion } = datosEspecialidad;
   const sql = `
     UPDATE especialidades
@@ -45,7 +45,7 @@ async function modificarEspecialidad(datosEspecialidad) {
       throw new Error("No se encontró la especialidad para actualizar.");
     }
 
-    auditarCambios(idUsuario, ip, 'Se modificó la especialidad: ' + idEspecialidad + datosEspecialidad);
+    auditarCambios(idUsuario, ip, 'Se modificó la especialidad: ' + idEspecialidad + datosEspecialidad.nombre + datosEspecialidad.duracion);
     return { exito: true, mensaje: "Especialidad actualizada correctamente." };
   } catch (error) {
     console.error("Error al actualizar especialidad:", error.message);
@@ -267,7 +267,7 @@ function obtenerFechaFormateada() {
 module.exports = {
   agregarEspecialidad,
   buscarEspecialidades,
-  modificarEspecialidad,
+  editarEspecialidad,
   eliminarEspecialidad,
   agregarSeccional,
   buscarSeccionales,

@@ -150,13 +150,19 @@ app.post('/buscarEspecialidades', async (req, res) => {
 });
 
 //MODIFICAR ESPECIALIDADES
-app.post('/modificarEspecialidad', async (req, res) => {
-  const datosEspecialidad = req.body;
-  const resultado = await control.modificarEspecialidad(datosEspecialidad);
-  if (resultado.valido) {
-    res.status(200).json(exito);
-  } else {
-    res.status(400).json({error: resultado.mensaje})
+app.post('/editarEspecialidad', async (req, res) => {
+  try {
+    const { idUsuario, datosEspecialidad } = req.body;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const resultado = await control.editarEspecialidad(ip, idUsuario, datosEspecialidad);
+    if (!resultado.valido) {
+      return res.status(400).json({ mensaje: resultado.mensaje });
+    }
+
+    res.status(200).json({ mensaje: 'Especialidad actualizada correctamente', resultado: resultado.resultado });
+  } catch (err) {
+    console.error('Error interno en editar especialidades:', err);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
   }
 });
 
