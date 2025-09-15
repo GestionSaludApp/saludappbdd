@@ -91,6 +91,16 @@ async function buscarTurnos(filtros) {
   }
 }
 
+async function buscarTurnosPorUsuario(filtros) {
+  try {
+    const resultado = await bddTurno.obtenerTurnosPorUsuario(filtros);
+    return { valido: true, turnos: resultado };
+  } catch (error) {
+    console.error('Error al consultar turnos:', error);
+    return { valido: false, mensaje: 'Error al consultar turnos' };
+  }
+}
+
 async function solicitarTurno(turno) {
   try {
     const resultado = await bddTurno.solicitarTurno(turno);
@@ -255,6 +265,7 @@ module.exports = {
   registrarPerfilAdicional,
   buscarDisponibilidades,
   buscarTurnos,
+  buscarTurnosPorUsuario,
   solicitarTurno,
   agregarEspecialidad,
   buscarEspecialidades,

@@ -28,13 +28,13 @@ async function obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana 
 }
 
 async function obtenerTurnos({ idEspecialidad, idSeccional, diaSemana }) {
-  // 1. Obtener disponibilidades filtradas
+  //Obtener disponibilidades filtradas
   const disponibilidades = await obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana });
 
   const turnosDisponibles = [];
 
   for (const disp of disponibilidades) {
-    // 2. Obtener duración del turno para la especialidad de cada disponibilidad
+    //Obtener duración del turno para la especialidad de cada disponibilidad
     const [especialidad] = await conexion.query(
       'SELECT duracion FROM especialidades WHERE idEspecialidad = ?',
       [disp.idEspecialidad]
@@ -43,24 +43,24 @@ async function obtenerTurnos({ idEspecialidad, idSeccional, diaSemana }) {
 
     if (!duracionTurno) {
       console.warn(`No se encontró duración para idEspecialidad: ${disp.idEspecialidad}`);
-      continue; // saltar esta disponibilidad
+      continue; //la saltea
     }
 
     let hora = disp.horaInicio;
     while (hora + duracionTurno <= disp.horaFin) {
-      // 3. Generar fecha próxima del diaSemana
-      const fecha = calcularProximaFecha(disp.diaSemana); // Usamos el diaSemana de la disponibilidad
-      const fechaStr = formatearFechaParaIdTurno(fecha); // 'ddmmyyyy'
+      //Generar fecha próxima del diaSemana
+      const fecha = calcularProximaFecha(disp.diaSemana);
+      const fechaStr = formatearFechaParaIdTurno(fecha);
 
-      // 4. Generar ID del turno
+      //Generar ID del turno
       const idTurno = `s${disp.idSeccional}p${disp.idPerfil}e${disp.idEspecialidad}d${fechaStr}h${hora}`;
 
-      // 5. Verificar si existe en turnosActivos
+      //Verificar si ya esta tomado en turnos
       const disponible = await verificarDisponibilidadTurno(idTurno);
       if (disponible) {
         turnosDisponibles.push({
           idTurno,
-          idPerfil: disp.idPerfil,
+          idProfesional: disp.idPerfil,
           idEspecialidad: disp.idEspecialidad,
           idSeccional: disp.idSeccional,
           diaSemana: disp.diaSemana,
@@ -75,6 +75,32 @@ async function obtenerTurnos({ idEspecialidad, idSeccional, diaSemana }) {
   }
 
   return turnosDisponibles;
+}
+
+//Obtiene turnos para las vistas de cronograma de usuarios
+async function obtenerTurnosPorUsuario({ idPerfil, idEspecialidad, idSeccional, diaSemana }) {
+  let query = `
+    SELECT * 
+    FROM turnos 
+    WHERE (idPerfilPaciente = ? OR idPerfilProfesional = ?)
+  `;
+  const params = [idPerfil, idPerfil];
+
+  if (idEspecialidad) {
+    query += " AND idEspecialidad = ?";
+    params.push(idEspecialidad);
+  }
+  if (idSeccional) {
+    query += " AND idSeccional = ?";
+    params.push(idSeccional);
+  }
+  if (diaSemana) {
+    query += " AND diaSemana = ?";
+    params.push(diaSemana);
+  }
+
+  const [resultado] = await conexion.query(query, params);
+  return resultado;
 }
 
 // Función para insertar un turno
@@ -93,17 +119,17 @@ async function solicitarTurno(turno) {
   const valores = [
       turno.idTurno,
       turno.idSeccional,
-      turno.idPerfilProfesional,
+      turno.idProfesional,
       turno.idEspecialidad,
       turno.diaSemana,
       turno.horaInicio,
       turno.horaFin,
-      turno.idPerfilPaciente
+      turno.idPaciente
   ];
 
   const [resultado] = await conexion.query(query, valores);
 
-  auditarCambios(0, 0, 'Se solicitó el turno '+turno.idTurno+' para el paciente ' + turno.idPerfilPaciente);
+  auditarCambios(0, 0, 'Se solicitó el turno '+turno.idTurno+' para el paciente ' + turno.idPaciente);
 
   //Retorna un objeto que identifica el turno insertado
   return {
@@ -115,7 +141,7 @@ async function solicitarTurno(turno) {
 //Verificar disponibilidad de turnos
 async function verificarDisponibilidadTurno(idTurno) {
   const [rows] = await conexion.query(
-    'SELECT EXISTS(SELECT 1 FROM turnosActivos WHERE idTurno = ?) AS disponible',
+    'SELECT EXISTS(SELECT 1 FROM turnos WHERE idTurno = ?) AS disponible',
     [idTurno]
   );
   return rows[0].disponible === 0; // true si NO existe (disponible)
@@ -204,5 +230,6 @@ module.exports = {
   obtenerDisponibilidades,
   obtenerPerfilesPorEspecialidad,
   obtenerTurnos,
+  obtenerTurnosPorUsuario,
   solicitarTurno
 };

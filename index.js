@@ -108,14 +108,34 @@ app.post('/buscarTurnos', async (req, res) => {
   }
 });
 
+//BUSCAR TURNOS DEL USUARIO
+app.post('/buscarTurnosPorUsuario', async (req, res) => {
+  const filtros = req.body;
+
+  const resultado = await control.buscarTurnosPorUsuario(filtros);
+
+  if (resultado.valido) {
+    res.status(200).json(resultado.turnos);
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});
+
 //SOLICITAR TURNOS
 app.post('/solicitarTurno', async (req, res) => {
   const turno = req.body;
   const resultado = await control.solicitarTurno(turno);
+
   if (resultado.valido) {
-    res.status(200).json(exito);
+    res.status(200).json({
+      exito: true,
+      turno: resultado.turno
+    });
   } else {
-    res.status(400).json({error: resultado.mensaje})
+    res.status(400).json({
+      exito: false,
+      error: resultado.mensaje
+    });
   }
 });
 
