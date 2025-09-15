@@ -1,5 +1,4 @@
 const express = require('express');
-const control = require('./control.js');
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
 
@@ -10,6 +9,9 @@ app.use(fileUpload({
   useTempFiles: true,
   tempFileDir: '/tmp/'
 }));
+
+const control = require('./control.js');
+const bddImagenes = require('./bddImagenes.js');
 
 //HABILITAR EL PUERTO
 app.listen(process.env.PORT || 3000, () => {
@@ -122,8 +124,9 @@ app.post('/agregarEspecialidad', async (req, res) => {
   try {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const { idUsuario, nuevaEspecialidad } = req.body;
-    
-    const resultado = await control.agregarEspecialidad(ip, idUsuario, nuevaEspecialidad);
+    const nuevaEspecialidadObjeto = JSON.parse(nuevaEspecialidad);
+
+    const resultado = await control.agregarEspecialidad(ip, idUsuario, nuevaEspecialidadObjeto);
 
     if (!resultado.valido) {
       return res.status(400).json({ mensaje: resultado.mensaje });
@@ -190,8 +193,9 @@ app.post('/agregarSeccional', async (req, res) => {
   try {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
     const { idUsuario, nuevaSeccional } = req.body;
+    const nuevaSeccionalObjeto = JSON.parse(nuevaSeccional);
     
-    const resultado = await control.agregarSeccional(ip, idUsuario, nuevaSeccional);
+    const resultado = await control.agregarSeccional(ip, idUsuario, nuevaSeccionalObjeto);
 
     if (!resultado.valido) {
       return res.status(400).json({ mensaje: resultado.mensaje });
@@ -243,6 +247,29 @@ app.post('/eliminarSeccional', async (req, res) => {
     res.status(200).json({ mensaje: 'Seccional eliminada correctamente', resultado: resultado.resultado });
   } catch (err) {
     console.error('Error interno al eliminar seccionales:', err);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+});
+
+//ALMACENAR IMAGENES EN CLOUDINARY
+app.post('/guardarImagen', async (req, res) => {
+  try {
+    const directorio = JSON.parse(req.body.directorio);
+    const imagen = req.files?.imagen || null;
+
+    if (!imagen) {
+      return res.status(400).json({ mensaje: 'No se recibió ninguna imagen.' });
+    }
+
+    const ruta = await bddImagenes.guardarImagen(directorio, imagen);
+
+    res.status(200).json({ 
+      mensaje: 'Imagen almacenada exitosamente', 
+      resultado: ruta
+    });
+
+  } catch (err) {
+    console.error('Error interno en /guardarImagen:', err);
     res.status(500).json({ mensaje: 'Error interno del servidor' });
   }
 });

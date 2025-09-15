@@ -26,6 +26,7 @@ async function buscarEspecialidades(filtros) {
   }
 
   const [resultadoEspecialidades] = await conexion.query(query, params);
+
   return resultadoEspecialidades;
 }
 
@@ -34,12 +35,12 @@ async function editarEspecialidad(ip, idUsuario, datosEspecialidad) {
   const { idEspecialidad, nombre, duracion } = datosEspecialidad;
   const sql = `
     UPDATE especialidades
-    SET nombre = ?, duracion = ?
+    SET nombre = ?, duracion = ?, imagen = ?
     WHERE idEspecialidad = ?
   `;
 
   try {
-    const [resultado] = await conexion.execute(sql, [nombre, duracion, idEspecialidad]);
+    const [resultado] = await conexion.execute(sql, [nombre, duracion, imagen, idEspecialidad]);
 
     if (resultado.affectedRows === 0) {
       throw new Error("No se encontró la especialidad para actualizar.");
@@ -56,12 +57,13 @@ async function editarEspecialidad(ip, idUsuario, datosEspecialidad) {
 //INSERTAR UNA ESPECIALIDAD
 async function agregarEspecialidad(ip, idUsuario, nuevaEspecialidad) {
   const sql = `
-    INSERT INTO especialidades (nombre, duracion)
-    VALUES (?, ?)
+    INSERT INTO especialidades (nombre, duracion, imagen)
+    VALUES (?, ?, ?)
   `;
   const valores = [
     nuevaEspecialidad.nombre,
-    nuevaEspecialidad.duracion
+    nuevaEspecialidad.duracion,
+    nuevaEspecialidad.imagen
   ];
 
   const conx = await conexion.getConnection();
@@ -147,20 +149,21 @@ async function buscarSeccionales(filtros) {
   }
 
   const [resultadoSeccionales] = await conexion.query(query, params);
+
   return resultadoSeccionales;
 }
 
 //MODIFICAR UNA SECCIONAL
 async function modificarSeccional(datosSeccional) {
-  const { idSeccional, nombre, direccion, ciudad, provincia, telefono, email } = datosSeccional;
+  const { idSeccional, nombre, direccion, ciudad, provincia, telefono, email, imagen } = datosSeccional;
   const sql = `
     UPDATE seccionales
-    SET nombre = ?, direccion = ?, ciudad = ?, provincia = ?, telefono = ?, email = ?
+    SET nombre = ?, direccion = ?, ciudad = ?, provincia = ?, telefono = ?, email = ?, imagen = ?
     WHERE idSeccional = ?
   `;
 
   try {
-    const [resultado] = await conexion.execute(sql, [nombre, direccion, ciudad, provincia, telefono, email, idSeccional]);
+    const [resultado] = await conexion.execute(sql, [nombre, direccion, ciudad, provincia, telefono, email, imagen, idSeccional]);
 
     if (resultado.affectedRows === 0) {
       throw new Error("No se encontró la seccional para actualizar.");
@@ -176,8 +179,8 @@ async function modificarSeccional(datosSeccional) {
 //INSERTAR UNA SECCIONAL
 async function agregarSeccional(ip, idUsuario, nuevaSeccional) {
   const sql = `
-    INSERT INTO seccionales (nombre, direccion, ciudad, provincia, telefono, email)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO seccionales (nombre, direccion, ciudad, provincia, telefono, email, imagen)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `;
   const valores = [
     nuevaSeccional.nombre,
@@ -185,7 +188,8 @@ async function agregarSeccional(ip, idUsuario, nuevaSeccional) {
     nuevaSeccional.ciudad,
     nuevaSeccional.provincia,
     nuevaSeccional.telefono,
-    nuevaSeccional.email
+    nuevaSeccional.email,
+    nuevaSeccional.imagen
   ];
 
   const conx = await conexion.getConnection();

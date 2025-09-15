@@ -1,5 +1,4 @@
 const mysql = require('mysql2/promise');
-const cloudinary = require('cloudinary').v2;
 
 const { credenciales } = require("./credenciales.js");
 
@@ -12,11 +11,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const nombreRepositorioImagenes = credenciales.cloudinary.cloud_name;
-const prefijoImagen = 'https://res.cloudinary.com/' + nombreRepositorioImagenes + '/image/upload/';
-
 const conexion = mysql.createPool(credenciales.mysql);
-cloudinary.config(credenciales.cloudinary);
 
 //FUNCIONES PARA EL REGISTRO
 async function registrarUsuario(ip, nuevoUsuario, nuevoPerfil) {
@@ -75,12 +70,9 @@ async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
     fechaNacimiento = '1900-01-01',
     idEspecialidad = 0,
     disponibilidad = [],
-    rol = ''
+    rol = '',
+    imagen = ''
   } = nuevoPerfil || {};
-
-  if (nuevoPerfil.imagen) {
-    var imagen = await guardarImagen(nuevoPerfil.imagen);
-  }
   
   let sqlDatos = '';
   let valoresDatos = [];
@@ -210,12 +202,6 @@ async function obtenerPerfilRol(rol, idPerfil) {
       throw new Error(`No se encontró el perfil en la tabla perfiles`);
     }
 
-    resultadoPerfilRol.forEach(p => {
-      if (p.imagen) {
-        p.imagen = prefijoImagen + p.imagen;
-      }
-    });
-
     return {...resultadoPerfilRol[0],};
   } finally {
     conx.release();
@@ -250,35 +236,9 @@ async function obtenerPerfiles(idUsuario, categoria = null) {
 
     const [perfiles] = await conx.query(query, params);
 
-    perfiles.forEach(p => {
-      if (p.imagen) {
-        p.imagen = prefijoImagen + p.imagen;
-      }
-    });
-
     return perfiles;
   } finally {
     conx.release();
-  }
-}
-
-async function guardarImagen(archivo) {
-  try {
-    const result = await cloudinary.uploader.upload(archivo.tempFilePath, {
-      folder: 'perfiles'
-    });
-
-    let ruta = result.secure_url;
-
-    if (ruta.startsWith(prefijoImagen)) {
-      ruta = ruta.substring(prefijoImagen.length);
-    }
-
-    return ruta;
-
-  } catch (err) {
-    console.error('Error al subir la imagen:', err);
-    throw err;
   }
 }
 
@@ -351,7 +311,6 @@ async function enviarMail(destinatario, asunto, mensaje) {
       html: `<p>${mensaje}</p>`
     });
 
-    console.log("Mensaje enviado: %s", info.messageId);
     return true;
   } catch (error) {
     console.error("Error enviando email:", error);
