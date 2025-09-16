@@ -51,6 +51,22 @@ async function registrarPerfilAdicional(ip, idUsuario, nuevoPerfil) {
   }
 }
 
+async function modificarPerfil(idUsuario, ip, datosPerfil) {
+  const { idPerfil, nombre, apellido, dni, fechaNacimiento } = datosPerfil;
+
+  if (!idPerfil || !nombre || !apellido || !dni || !fechaNacimiento) {
+    throw new Error("Faltan datos para actualizar el perfil.");
+  }
+
+  try {
+    const resultado = await bddUsuario.modificarPerfil(idUsuario, ip, datosPerfil);
+    return { valido: true, perfil: resultado };
+  } catch (error) {
+    console.error('Error al modificar el perfil: ', error);
+    return { valido: false, mensaje: 'Error al modificar el perfil' };
+  }
+}
+
 async function verificarUsuario(usuario) {
   const camposObligatorios = ['email', 'password'];
 
@@ -259,10 +275,35 @@ async function eliminarSeccional(ip, idUsuario, datosSeccional) {
   }
 }
 
+async function agregarReporte(idUsuario, ip, nuevoReporte){
+  const camposObligatorios = [
+    'idPerfilPaciente',
+    'idPerfilProfesional',
+    'informe'
+  ];
+
+  const faltantes = camposObligatorios.filter(campo => {
+    return nuevoReporte[campo] === undefined || nuevoReporte[campo] === null || nuevoReporte[campo] === '';
+  });
+
+  if (faltantes.length > 0) {
+    return { valido: false, mensaje: `Faltan campos: ${faltantes.join(', ')}` };
+  }
+
+  try {
+    const resultado = await bddTurno.agregarReporte(idUsuario, ip, nuevoReporte);
+    return { valido: true, resultado };
+  } catch (error) {
+    console.error('Error al registrar en la base de datos:', error);
+    return { valido: false, mensaje: 'Error al registrar en la base de datos' };
+  }
+}
+
 module.exports = {
   verificarNuevoUsuario,
   verificarUsuario,
   registrarPerfilAdicional,
+  modificarPerfil,
   buscarDisponibilidades,
   buscarTurnos,
   buscarTurnosPorUsuario,
@@ -274,5 +315,6 @@ module.exports = {
   agregarSeccional,
   buscarSeccionales,
   modificarSeccional,
-  eliminarSeccional
+  eliminarSeccional,
+  agregarReporte
 };

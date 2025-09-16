@@ -125,6 +125,31 @@ async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
   }
 }
 
+//MODIFICAR UNA SECCIONAL
+async function modificarPerfil(idUsuario, ip, datosPerfil) {
+  const { idPerfil, nombre, apellido, dni, fechaNacimiento } = datosPerfil;
+  const sql = `
+    UPDATE perfiles
+    SET nombre = ?, apellido = ?, dni = ?, fechaNacimiento = ?
+    WHERE idPerfil = ?
+  `;
+
+  try {
+    const [resultado] = await conexion.execute(sql, [nombre, apellido, dni, fechaNacimiento, idPerfil]);
+
+    if (resultado.affectedRows === 0) {
+      throw new Error("No se encontró el perfil para actualizar.");
+    }
+
+    auditarCambios(idUsuario, ip, 'Se modificaron los datos del perfil '+idPerfil);
+
+    return { exito: true, mensaje: "Perfil actualizado correctamente." };
+  } catch (error) {
+    console.error("Error al actualizar el perfil:", error.message);
+    throw error;
+  }
+}
+
 async function registrarPerfilAdicional(ip, idUsuario, nuevoPerfil){
   const conx = await conexion.getConnection();
   try {
@@ -321,5 +346,6 @@ async function enviarMail(destinatario, asunto, mensaje) {
 module.exports = {
   registrarUsuario,
   registrarPerfilAdicional,
+  modificarPerfil,
   ingresarUsuario
 };

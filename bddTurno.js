@@ -153,22 +153,41 @@ async function obtenerPerfilesPorEspecialidad(idEspecialidad) {
   return resultado.map(resultado => resultado.idPerfil);
 }
 
-//GESTIONAR HISTORIAS CLINICAS
-async function escribirInforme(idPaciente, idProfesional, informe, imagen){
-  fecha = obtenerFechaFormateada();
-  const sql = `
-    INSERT INTO historiasClinicas (idPerfilPaciente, idPerfilProfesional, fecha, informe, imagen)
-    VALUES (?, ?, ?, ?, ?)
-  `;
-  const valores = [idPaciente, idProfesional, fecha, informe, imagen];
-  const [resultado] = await conx.query(sql, valores);
-  return resultado.insertId;
-}
-
 async function agregarPerfilUsuario(conx, idUsuario, categoria, rol, alias) {
   
 
   return resultadoPerfilUsuario.insertId;
+}
+
+//INSERTAR UN REPORTE MEDICO
+async function agregarReporte(idUsuario, ip, nuevoReporte) {
+  const fecha = obtenerFechaFormateada();
+  const sql = `
+    INSERT INTO reportes (idPerfilPaciente, idPerfilProfesional, fecha, informe, imagen)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+  const valores = [
+    nuevoReporte.idPerfilPaciente,
+    nuevoReporte.idPerfilProfesional,
+    fecha,
+    nuevoReporte.informe,
+    nuevoReporte.imagen
+  ];
+
+  const conx = await conexion.getConnection();
+  try {
+    const [resultadoReporte] = await conx.query(sql, valores);
+    const idReporte = resultadoReporte.insertId;
+
+    auditarCambios(idUsuario, ip, 'Se agrego el reporte: ' + idReporte + ' sobre el paciente: ' + nuevoReporte.idPerfilPaciente);
+
+    return resultadoReporte;
+  } catch (err) {
+    console.error('Error al crear el reporte: ', err.sqlMessage || err);
+    throw err;
+  } finally {
+    conx.release();
+  }
 }
 
 //FUNCIONES GENERALES
@@ -226,10 +245,10 @@ function formatearFechaParaIdTurno(fecha) {
 }
 
 module.exports = {
-  escribirInforme,
   obtenerDisponibilidades,
   obtenerPerfilesPorEspecialidad,
   obtenerTurnos,
   obtenerTurnosPorUsuario,
-  solicitarTurno
+  solicitarTurno,
+  agregarReporte
 };

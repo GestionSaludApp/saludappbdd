@@ -65,6 +65,26 @@ app.post('/registrarPerfilAdicional', async (req, res) => {
   }
 });
 
+//MODIFICAR PERFiL
+app.post('/modificarPerfil', async (req, res) => {
+  try{
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const { idUsuario } = req.body.idUsuario;
+    const datosPerfilObjeto = JSON.parse(datosPerfil);
+
+    const resultado = await control.modificarPerfil(idUsuario, ip, datosPerfilObjeto);
+    if (resultado.valido) {
+      res.status(200).json(exito);
+    } else {
+      res.status(400).json({error: resultado.mensaje})
+    }
+  } catch (err) {
+    console.error('Error interno en modificar perfil:', err);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+
+});
+
 //LOGUEAR UN USUARIO
 app.post('/ingresarUsuario', async (req, res) => {
   try {
@@ -252,7 +272,7 @@ app.post('/modificarSeccional', async (req, res) => {
   }
 });
 
-// ELIMINAR SECCIONALES
+//ELIMINAR SECCIONALES
 app.post('/eliminarSeccional', async (req, res) => {
   try {
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
@@ -267,6 +287,26 @@ app.post('/eliminarSeccional', async (req, res) => {
     res.status(200).json({ mensaje: 'Seccional eliminada correctamente', resultado: resultado.resultado });
   } catch (err) {
     console.error('Error interno al eliminar seccionales:', err);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+});
+
+//AGREGAR REPORTE MEDICO
+app.post('/agregarReporte', async (req, res) => {
+  try {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const { idUsuario, nuevoReporte } = req.body;
+    const nuevoReporteObjeto = JSON.parse(nuevoReporte);
+    
+    const resultado = await control.agregarReporte(idUsuario, ip, nuevoReporteObjeto);
+
+    if (!resultado.valido) {
+      return res.status(400).json({ mensaje: resultado.mensaje });
+    }
+
+    res.status(200).json({ mensaje: 'Reporte agregado exitosamente', resultado: resultado.resultado });
+  } catch (err) {
+    console.error('Error interno en agregar reportes:', err);
     res.status(500).json({ mensaje: 'Error interno del servidor' });
   }
 });
