@@ -263,8 +263,9 @@ app.post('/buscarSeccionales', async (req, res) => {
 
 //MODIFICAR SECCIONALES
 app.post('/editarSeccional', async (req, res) => {
-  const datosSeccional = req.body;
-  const resultado = await control.modificarSeccional(datosSeccional);
+  const { idUsuario, datosSeccional } = req.body;
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const resultado = await control.modificarSeccional(idUsuario, ip, datosSeccional);
   if (resultado.valido) {
     res.status(200).json(exito);
   } else {

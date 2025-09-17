@@ -154,8 +154,6 @@ async function obtenerPerfilesPorEspecialidad(idEspecialidad) {
 }
 
 async function agregarPerfilUsuario(conx, idUsuario, categoria, rol, alias) {
-  
-
   return resultadoPerfilUsuario.insertId;
 }
 

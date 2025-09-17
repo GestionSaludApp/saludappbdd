@@ -232,7 +232,7 @@ async function buscarSeccionales(filtros) {
   }
 }
 
-async function modificarSeccional(datosSeccional) {
+async function modificarSeccional(idUsuario, ip, datosSeccional) {
   const { idSeccional, nombre, direccion, ciudad, provincia, telefono, email } = datosSeccional;
 
   if (!idSeccional || !nombre || !direccion || !ciudad || !provincia || !telefono || !email) {

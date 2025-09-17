@@ -154,7 +154,7 @@ async function buscarSeccionales(filtros) {
 }
 
 //MODIFICAR UNA SECCIONAL
-async function modificarSeccional(datosSeccional) {
+async function modificarSeccional(idUsuario, ip, datosSeccional) {
   const { idSeccional, nombre, direccion, ciudad, provincia, telefono, email } = datosSeccional;
   const sql = `
     UPDATE seccionales
@@ -169,6 +169,7 @@ async function modificarSeccional(datosSeccional) {
       throw new Error("No se encontró la seccional para actualizar.");
     }
 
+    auditarCambios(idUsuario, ip, 'Se modificó la seccional: ' + idSeccional + datosSeccional.nombre);
     return { exito: true, mensaje: "Seccional actualizada correctamente." };
   } catch (error) {
     console.error("Error al actualizar seccional:", error.message);
