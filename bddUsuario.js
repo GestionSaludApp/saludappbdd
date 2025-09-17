@@ -214,6 +214,35 @@ async function ingresarUsuario(email, password) {
   }
 }
 
+async function ingresarPerfil(idUsuario, idPerfil) {
+  const conx = await conexion.getConnection();
+
+  try {
+    const [usuarioPerfil] = await conx.query(
+      `SELECT * FROM usuarioPerfiles WHERE idUsuario = ? AND idPerfil = ? AND estado = "activo"`,
+      [idUsuario, idPerfil]
+    );
+
+    if (usuarioPerfil.length === 0) {
+      throw new Error(`El usuario ${idUsuario} no está asociado al perfil ${idPerfil}`);
+    }
+
+    const [perfilActivo] = await conx.query(
+      `SELECT * FROM perfiles WHERE idPerfil = ? AND estado = "activo"`,
+      [idPerfil]
+    );
+
+    if (perfilActivo.length === 0) {
+      throw new Error(`No se encontró el perfil en la tabla perfiles`);
+    }
+
+    return { ...perfilActivo[0] };
+
+  } finally {
+    conx.release();
+  }
+}
+
 async function obtenerPerfilRol(rol, idPerfil) {
   const conx = await conexion.getConnection();
 
@@ -347,5 +376,6 @@ module.exports = {
   registrarUsuario,
   registrarPerfilAdicional,
   modificarPerfil,
-  ingresarUsuario
+  ingresarUsuario,
+  ingresarPerfil
 };

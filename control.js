@@ -87,6 +87,21 @@ async function verificarUsuario(usuario) {
   }
 }
 
+async function ingresarPerfil(idUsuario, idPerfil) {
+  if (idUsuario === undefined || idPerfil === undefined) {
+    return { valido: false, mensaje: `Faltan datos necesarios.` };
+  }
+
+  try {
+    const perfilActivo = await bddUsuario.ingresarPerfil(idUsuario, idPerfil);
+    return { valido: true, perfilActivo };
+  } catch (error) {
+    console.error('Error al buscar en la base de datos:', error);
+    return { valido: false, mensaje: 'Error al buscar en la base de datos' };
+  }
+}
+
+
 async function buscarDisponibilidades(filtros) {
   try {
     const resultado = await bddTurno.obtenerDisponibilidades(filtros);
@@ -304,6 +319,7 @@ module.exports = {
   verificarUsuario,
   registrarPerfilAdicional,
   modificarPerfil,
+  ingresarPerfil,
   buscarDisponibilidades,
   buscarTurnos,
   buscarTurnosPorUsuario,

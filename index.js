@@ -102,6 +102,23 @@ app.post('/ingresarUsuario', async (req, res) => {
   }
 });
 
+//CAMBIAR PERFIL
+app.post('/ingresarPerfil', async (req, res) => {
+  try {
+    const { idUsuario, idPerfil } = req.body;
+    const resultado = await control.ingresarPerfil(idUsuario, idPerfil);
+
+    if (!resultado.valido) {
+      return res.status(400).json({ mensaje: resultado.mensaje });
+    }
+
+    res.status(200).json({ mensaje: 'Cambio de perfil exitoso', perfilActivo: resultado.perfilActivo });
+  } catch (err) {
+    console.error('Error interno en ingreso de perfil:', err);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+});
+
 //BUSCAR DISPONIBILIDADES
 app.post('/buscarDisponibilidades', async (req, res) => {
   const filtros = req.body;
