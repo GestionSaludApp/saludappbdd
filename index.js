@@ -262,7 +262,7 @@ app.post('/buscarSeccionales', async (req, res) => {
 });
 
 //MODIFICAR SECCIONALES
-app.post('/modificarSeccional', async (req, res) => {
+app.post('/editarSeccional', async (req, res) => {
   const datosSeccional = req.body;
   const resultado = await control.modificarSeccional(datosSeccional);
   if (resultado.valido) {

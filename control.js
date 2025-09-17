@@ -233,7 +233,7 @@ async function buscarSeccionales(filtros) {
 }
 
 async function modificarSeccional(datosSeccional) {
-  const { idSeccional, nombre, direccion, ciudad, provincia, telefono, email } = datosEspecialidad;
+  const { idSeccional, nombre, direccion, ciudad, provincia, telefono, email } = datosSeccional;
 
   if (!idSeccional || !nombre || !direccion || !ciudad || !provincia || !telefono || !email) {
     throw new Error("Faltan datos para actualizar la seccional.");

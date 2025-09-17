@@ -7,7 +7,7 @@ const conexion = mysql.createPool(credenciales.mysql);
 async function buscarEspecialidades(filtros) {
   const { idEspecialidad, nombre, duracion } = filtros;
 
-  let query = 'SELECT * FROM especialidades WHERE 1=1';
+  let query = 'SELECT * FROM especialidades WHERE 1=1 AND estado = "activo"';
   const params = [];
 
   if (idEspecialidad !== undefined) {
@@ -35,12 +35,12 @@ async function editarEspecialidad(ip, idUsuario, datosEspecialidad) {
   const { idEspecialidad, nombre, duracion } = datosEspecialidad;
   const sql = `
     UPDATE especialidades
-    SET nombre = ?, duracion = ?, imagen = ?
+    SET nombre = ?, duracion = ?
     WHERE idEspecialidad = ?
   `;
 
   try {
-    const [resultado] = await conexion.execute(sql, [nombre, duracion, imagen, idEspecialidad]);
+    const [resultado] = await conexion.execute(sql, [nombre, duracion, idEspecialidad]);
 
     if (resultado.affectedRows === 0) {
       throw new Error("No se encontró la especialidad para actualizar.");
@@ -110,7 +110,7 @@ async function eliminarEspecialidad(ip, idUsuario, datosEspecialidad) {
 async function buscarSeccionales(filtros) {
   const { idSeccional, nombre, direccion, ciudad, provincia, telefono, email } = filtros;
 
-  let query = 'SELECT * FROM seccionales WHERE 1=1';
+  let query = 'SELECT * FROM seccionales WHERE 1=1 AND estado = "activo"';
   const params = [];
 
   if (idSeccional !== undefined) {
@@ -155,15 +155,15 @@ async function buscarSeccionales(filtros) {
 
 //MODIFICAR UNA SECCIONAL
 async function modificarSeccional(datosSeccional) {
-  const { idSeccional, nombre, direccion, ciudad, provincia, telefono, email, imagen } = datosSeccional;
+  const { idSeccional, nombre, direccion, ciudad, provincia, telefono, email } = datosSeccional;
   const sql = `
     UPDATE seccionales
-    SET nombre = ?, direccion = ?, ciudad = ?, provincia = ?, telefono = ?, email = ?, imagen = ?
+    SET nombre = ?, direccion = ?, ciudad = ?, provincia = ?, telefono = ?, email = ?
     WHERE idSeccional = ?
   `;
 
   try {
-    const [resultado] = await conexion.execute(sql, [nombre, direccion, ciudad, provincia, telefono, email, imagen, idSeccional]);
+    const [resultado] = await conexion.execute(sql, [nombre, direccion, ciudad, provincia, telefono, email, idSeccional]);
 
     if (resultado.affectedRows === 0) {
       throw new Error("No se encontró la seccional para actualizar.");

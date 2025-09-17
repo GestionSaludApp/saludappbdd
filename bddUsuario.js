@@ -172,7 +172,7 @@ async function ingresarUsuario(email, password) {
 
   try {
     const [usuarios] = await conx.query(
-      'SELECT * FROM usuarios WHERE email = ? AND password = ?',
+      'SELECT * FROM usuarios WHERE email = ? AND password = ? AND estado = "activo"',
       [email, password]
     );
 
@@ -219,7 +219,7 @@ async function obtenerPerfilRol(rol, idPerfil) {
 
   try {
     const [resultadoPerfilRol] = await conx.query(
-      `SELECT * FROM perfiles WHERE idPerfil = ?`,
+      `SELECT * FROM perfiles WHERE idPerfil = ? AND estado = "activo"`,
       [idPerfil]
     );
 
@@ -251,7 +251,7 @@ async function obtenerPerfiles(idUsuario, categoria = null) {
   const conx = await conexion.getConnection();
 
   try {
-    let query = 'SELECT * FROM usuarioPerfiles WHERE idUsuario = ?';
+    let query = 'SELECT * FROM usuarioPerfiles WHERE idUsuario = ? AND estado = "activo"';
     const params = [idUsuario];
 
     if (categoria) {

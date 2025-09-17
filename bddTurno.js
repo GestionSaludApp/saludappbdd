@@ -36,7 +36,7 @@ async function obtenerTurnos({ idEspecialidad, idSeccional, diaSemana }) {
   for (const disp of disponibilidades) {
     //Obtener duración del turno para la especialidad de cada disponibilidad
     const [especialidad] = await conexion.query(
-      'SELECT duracion FROM especialidades WHERE idEspecialidad = ?',
+      'SELECT duracion FROM especialidades WHERE idEspecialidad = ? AND estado = "activo"',
       [disp.idEspecialidad]
     );
     const duracionTurno = especialidad[0]?.duracion;
@@ -148,7 +148,7 @@ async function verificarDisponibilidadTurno(idTurno) {
 }
 
 async function obtenerPerfilesPorEspecialidad(idEspecialidad) {
-  const query = 'SELECT idPerfil FROM perfilesProfesional WHERE idEspecialidad = ?';
+  const query = 'SELECT idPerfil FROM perfilesProfesional WHERE idEspecialidad = ? AND estado = "activo"';
   const [resultado] = await conexion.query(query, [idEspecialidad]);
   return resultado.map(resultado => resultado.idPerfil);
 }
@@ -179,7 +179,10 @@ async function agregarReporte(idUsuario, ip, nuevoReporte) {
     const [resultadoReporte] = await conx.query(sql, valores);
     const idReporte = resultadoReporte.insertId;
 
-    auditarCambios(idUsuario, ip, 'Se agrego el reporte: ' + idReporte + ' sobre el paciente: ' + nuevoReporte.idPerfilPaciente);
+    if (resultadoReporte) {
+      auditarCambios(idUsuario, ip, 'Se agrego el reporte: ' + idReporte + ' sobre el paciente: ' + nuevoReporte.idPerfilPaciente);
+      this.finalizarTurno(idUsuario, ip, nuevoReporte.idTurno);
+    }
 
     return resultadoReporte;
   } catch (err) {
@@ -187,6 +190,41 @@ async function agregarReporte(idUsuario, ip, nuevoReporte) {
     throw err;
   } finally {
     conx.release();
+  }
+}
+
+//FINALIZAR UN TURNO
+async function finalizarTurno(idUsuario, ip, idTurno) {
+  const fecha = obtenerFechaFormateada();
+  const conexionLocal = await conexion.getConnection();
+
+  try {
+    await conexionLocal.beginTransaction();
+
+    const queryCopiar = `
+      INSERT INTO turnosFinalizados (idTurno, idSeccional, idPerfilProfesional, idEspecialidad, diaSemana, horaInicio, horaFin, idPerfilPaciente, fechaFinalizacion)
+      SELECT idTurno, idSeccional, idPerfilProfesional, idEspecialidad, diaSemana, horaInicio, horaFin, idPerfilPaciente, ?
+      FROM turnos
+      WHERE idTurno = ?
+    `;
+    await conexionLocal.query(queryCopiar, [fecha, idTurno]);
+
+    const queryEliminar = `DELETE FROM turnos WHERE idTurno = ?`;
+    await conexionLocal.query(queryEliminar, [idTurno]);
+
+    auditarCambios(idUsuario, ip, 'Se finalizó el turno ' + idTurno);
+
+    await conexionLocal.commit();
+
+    return {
+      mensaje: 'Turno finalizado exitosamente'
+    };
+  } catch (error) {
+    await conexionLocal.rollback();
+    console.error('Error al finalizar turno:', error);
+    throw new Error('No se pudo finalizar el turno');
+  } finally {
+    conexionLocal.release();
   }
 }
 
@@ -250,5 +288,6 @@ module.exports = {
   obtenerTurnos,
   obtenerTurnosPorUsuario,
   solicitarTurno,
+  finalizarTurno,
   agregarReporte
 };
