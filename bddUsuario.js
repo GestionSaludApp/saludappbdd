@@ -15,15 +15,17 @@ const conexion = mysql.createPool(credenciales.mysql);
 
 //FUNCIONES PARA EL REGISTRO
 async function registrarUsuario(ip, nuevoUsuario, nuevoPerfil) {
+  nuevoCodigo = generarCodigoActivacion();
   const sql = `
-    INSERT INTO usuarios (email, password, fechaCreacion, ultimoIngreso)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO usuarios (email, password, fechaCreacion, ultimoIngreso, codigo)
+    VALUES (?, ?, ?, ?, ?)
   `;
   const valores = [
     nuevoUsuario.email,
     nuevoUsuario.password,
     nuevoUsuario.fechaCreacion,
-    nuevoUsuario.ultimoIngreso
+    nuevoUsuario.ultimoIngreso,
+    nuevoCodigo
   ];
 
   const conx = await conexion.getConnection();
@@ -37,10 +39,11 @@ async function registrarUsuario(ip, nuevoUsuario, nuevoPerfil) {
 
     await registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil);
 
-    enviarMail(
+    enviarEmailRegistro(
       nuevoUsuario.email,
       'Bienvenido ' + nuevoPerfil.nombre + ' a SaludApp',
-      'Se ha registrado exitosamente en SaludApp utilizando el email: ' + nuevoUsuario.email
+      'Su codigo de activacion es: ',
+      nuevoCodigo
     );
 
     return resultadoUsuario;
@@ -49,6 +52,50 @@ async function registrarUsuario(ip, nuevoUsuario, nuevoPerfil) {
     throw err;
   } finally {
     conx.release();
+  }
+}
+
+//ACTIVAR EL USUARIO
+async function activarUsuario(email, password, codigo, ip) {
+  const conexionLocal = await conexion.getConnection();
+
+  try {
+    const query = `
+      UPDATE usuarios
+      SET estado = 'activo',
+          codigo = ''
+      WHERE email = ? AND password = ? AND codigo = ? AND estado = 'pendiente'
+    `;
+
+    const [resultado] = await conexionLocal.query(query, [email, password, codigo]);
+
+    if (resultado.affectedRows === 0) {
+      return { ok: false, idUsuario: null };
+    }
+
+    const querySelect = `
+      SELECT idUsuario
+      FROM usuarios
+      WHERE email = ? AND estado = 'activo'
+      LIMIT 1
+    `;
+
+    const [idUsuario] = await conexionLocal.query(querySelect, [email, codigo]);
+
+    auditarCambios(idUsuario, ip, 'Se activo el usuario '+idUsuario);
+
+    enviarEmailGeneral(
+      nuevoUsuario.email,
+      'Bienvenido ' + nuevoPerfil.nombre + ' a SaludApp',
+      'Ha activado su usuario exitosamente.',
+    );
+
+    return resultado.affectedRows > 0;
+  } catch (error) {
+    console.error('Error en base de datos:', error);
+    return false;
+  } finally {
+    conexionLocal.release();
   }
 }
 
@@ -125,7 +172,7 @@ async function registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil) {
   }
 }
 
-//MODIFICAR UNA SECCIONAL
+//MODIFICAR EL PERFIL
 async function modificarPerfil(idUsuario, ip, datosPerfil) {
   const { idPerfil, nombre, apellido, dni, fechaNacimiento } = datosPerfil;
   const sql = `
@@ -218,25 +265,22 @@ async function ingresarPerfil(idUsuario, idPerfil) {
   const conx = await conexion.getConnection();
 
   try {
-    const [usuarioPerfil] = await conx.query(
-      `SELECT * FROM usuarioPerfiles WHERE idUsuario = ? AND idPerfil = ? AND estado = "activo"`,
+    const [resultado] = await conx.query(
+      `SELECT p.*, up.rol
+       FROM usuarioPerfiles up
+       INNER JOIN perfiles p ON p.idPerfil = up.idPerfil
+       WHERE up.idUsuario = ? 
+         AND up.idPerfil = ?
+         AND up.estado = "activo"
+         AND p.estado = "activo"`,
       [idUsuario, idPerfil]
     );
 
-    if (usuarioPerfil.length === 0) {
-      throw new Error(`El usuario ${idUsuario} no está asociado al perfil ${idPerfil}`);
+    if (resultado.length === 0) {
+      throw new Error(`El usuario ${idUsuario} no está asociado al perfil ${idPerfil} o el perfil no está activo`);
     }
 
-    const [perfilActivo] = await conx.query(
-      `SELECT * FROM perfiles WHERE idPerfil = ? AND estado = "activo"`,
-      [idPerfil]
-    );
-
-    if (perfilActivo.length === 0) {
-      throw new Error(`No se encontró el perfil en la tabla perfiles`);
-    }
-
-    return { ...perfilActivo[0] };
+    return { ...resultado[0] };
 
   } finally {
     conx.release();
@@ -355,7 +399,54 @@ function obtenerFechaFormateada() {
   return `${dia}/${mes}/${anio}, ${horas}:${minutos}`;
 }
 
-async function enviarMail(destinatario, asunto, mensaje) {
+function generarCodigoActivacion(longitud = 5) {
+  const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let codigo = '';
+
+  for (let i = 0; i < longitud; i++) {
+    const indice = Math.floor(Math.random() * caracteres.length);
+    codigo += caracteres[indice];
+  }
+
+  return codigo;
+}
+
+//ENVIAR EMAIL
+async function enviarEmailRegistro(destinatario, asunto, mensaje, codigo) {
+  try {
+    const urlActivacion = credenciales.urlFront+'/activarMiUsuario';
+
+    const html = `
+      <p>${mensaje}</p>
+      <p><strong> ${codigo} </strong></p>
+      <p><a href="${urlActivacion}" 
+            style="display:inline-block;
+                   padding:10px 15px;
+                   background-color:#007BFF;
+                   color:#fff;
+                   text-decoration:none;
+                   border-radius:5px;">
+        Activar mi cuenta
+      </a></p>
+      <p>Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
+      <a href="${urlActivacion}">${urlActivacion}</a></p>
+    `;
+
+    await transporter.sendMail({
+      from: `"SaludApp" <${credenciales.email.user}>`,
+      to: destinatario,
+      subject: asunto,
+      html
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error enviando email de registro:", error);
+    return false;
+  }
+}
+
+async function enviarEmailGeneral(destinatario, asunto, mensaje) {
   try {
     const info = await transporter.sendMail({
       from: `"SaludApp" <${credenciales.email.user}>`,
@@ -375,6 +466,7 @@ async function enviarMail(destinatario, asunto, mensaje) {
 module.exports = {
   registrarUsuario,
   registrarPerfilAdicional,
+  activarUsuario,
   modificarPerfil,
   ingresarUsuario,
   ingresarPerfil

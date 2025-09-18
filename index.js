@@ -46,6 +46,25 @@ app.post('/registrarUsuario', async (req, res) => {
   }
 });
 
+//ACTIVAR USUARIO AUTOMATICO
+app.post('/activarMiUsuario', async (req, res) => {
+  try {
+    const { email, password, codigo } = req.body;
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+    const resultado = await control.activarUsuario(email, password, codigo, ip);
+
+    if (resultado.ok) {
+      res.status(200).json({ mensaje: 'Usuario activado correctamente' });
+    } else {
+      res.status(400).json({ mensaje: resultado.mensaje });
+    }
+  } catch (error) {
+    console.error('Error al recibir los datos:', error);
+    res.status(500).json({ mensaje: 'Error en el servidor' });
+  }
+});
+
 //AGREGAR UN NUEVO PERFIL A UN USUARIO EXISTENTE
 app.post('/registrarPerfilAdicional', async (req, res) => {
   try {

@@ -87,6 +87,25 @@ async function verificarUsuario(usuario) {
   }
 }
 
+async function activarUsuario(email, password, codigo, ip) {
+  try {
+    if (!email || !password || !codigo) {
+      return { ok: false, mensaje: 'Faltan datos para activar el usuario' };
+    }
+
+    const actualizado = await bddUsuario.activarUsuario(email, password, codigo, ip);
+
+    if (actualizado) {
+      return { ok: true };
+    } else {
+      return { ok: false, mensaje: 'No se pudo activar el usuario (datos incorrectos o código inválido)' };
+    }
+  } catch (error) {
+    console.error('Error al activar el usuario:', error);
+    return { ok: false, mensaje: 'Error en activación de usuario' };
+  }
+}
+
 async function ingresarPerfil(idUsuario, idPerfil) {
   if (idUsuario === undefined || idPerfil === undefined) {
     return { valido: false, mensaje: `Faltan datos necesarios.` };
@@ -100,7 +119,6 @@ async function ingresarPerfil(idUsuario, idPerfil) {
     return { valido: false, mensaje: 'Error al buscar en la base de datos' };
   }
 }
-
 
 async function buscarDisponibilidades(filtros) {
   try {
@@ -317,6 +335,7 @@ async function agregarReporte(idUsuario, ip, nuevoReporte){
 module.exports = {
   verificarNuevoUsuario,
   verificarUsuario,
+  activarUsuario,
   registrarPerfilAdicional,
   modificarPerfil,
   ingresarPerfil,
