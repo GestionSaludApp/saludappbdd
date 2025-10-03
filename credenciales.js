@@ -11,9 +11,9 @@ const credenciales = {
     api_secret: 'SECRETO'
   },
   email: {
-    usuario: "gestionSaludApp@email.com",
-    password: ""
+    usuario: 'gestionSaludApp@email.com',
+    password: 'HYDF 7UTJ DBH3 ZZP3'
   }
 };
 
-module.exports = credenciales;
+module.exports = { credenciales };
