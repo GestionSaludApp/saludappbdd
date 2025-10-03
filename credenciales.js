@@ -1,4 +1,4 @@
-export const credenciales = {
+const credenciales = {
   mysql: {
     host: 'mysql.db.mdbgo.com',
     user: 'saludapp_admin',
@@ -15,3 +15,5 @@ export const credenciales = {
     password: ""
   }
 };
+
+module.exports = credenciales;
