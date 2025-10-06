@@ -3,6 +3,7 @@ const mysql = require('mysql2/promise');
 const { credenciales } = require("./credenciales.js");
 
 const nodemailer = require("nodemailer");
+/*
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -10,6 +11,17 @@ const transporter = nodemailer.createTransport({
     pass: credenciales.email.password
   }
 });
+*/
+const transporter = nodemailer.createTransport({
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true, // true para puerto 465, false para 587
+  auth: {
+    user: credenciales.email.usuario,
+    pass: credenciales.email.password
+  }
+});
+
 
 const conexion = mysql.createPool(credenciales.mysql);
 
