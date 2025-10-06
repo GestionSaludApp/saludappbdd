@@ -6,9 +6,9 @@ const credenciales = {
     database: 'saludapp_bdd'
   },
   cloudinary: {
-    cloud_name: 'NOMBRE_REPO',
-    api_key: 'KEY',
-    api_secret: 'SECRETO'
+    cloud_name: 'daot4w6wn',
+    api_key: '576566524786653',
+    api_secret: 'i5Zis5pawFJdFpyHFKHMi60T3GQ'
   },
   email: {
     usuario: 'gestionSaludApp@email.com',
