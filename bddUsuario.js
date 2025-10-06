@@ -17,8 +17,8 @@ const transporter = nodemailer.createTransport({
   port: 465,
   secure: true, // true para puerto 465, false para 587
   auth: {
-    user: credenciales.email.usuario,
-    pass: credenciales.email.password
+    user: 'gestionsaludapp@gmail.com',
+    pass: 'gnjp upbj lina apwr'
   }
 });
 
