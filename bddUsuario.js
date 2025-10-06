@@ -55,7 +55,7 @@ async function registrarUsuario(ip, nuevoUsuario, nuevoPerfil) {
     enviarEmailRegistro(
       nuevoUsuario.email,
       'Bienvenido ' + nuevoPerfil.nombre + ' a SaludApp',
-      'Su codigo de activacion es: ',
+      'Su codigo de activacion sera: ',
       nuevoCodigo
     );
 
