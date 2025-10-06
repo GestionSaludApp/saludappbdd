@@ -433,7 +433,7 @@ async function enviarEmailRegistro(destinatario, asunto, mensaje, codigo) {
     `;
 
     await transporter.sendMail({
-      from: `"SaludApp" <${credenciales.email.user}>`,
+      from: `"SaludApp" <${credenciales.email.usuario}>`,
       to: destinatario,
       subject: asunto,
       html
