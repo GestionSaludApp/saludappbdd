@@ -11,8 +11,8 @@ const credenciales = {
     api_secret: 'i5Zis5pawFJdFpyHFKHMi60T3GQ'
   },
   email: {
-    usuario: 'gestionsaludapp',
-    password: 'gqex tfze cfmr lacg'
+    usuario: 'proyectoSaludApp',
+    password: 'gnjp upbj lina apwr'
   }
 };
 
