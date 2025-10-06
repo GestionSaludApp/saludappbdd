@@ -12,7 +12,7 @@ const credenciales = {
   },
   email: {
     usuario: 'gestionsaludapp@gmail.com',
-    password: 'wmev ltca kamv fwwy'
+    password: 'gqex tfze cfmr lacg'
   }
 };
 
