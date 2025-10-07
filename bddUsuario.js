@@ -230,7 +230,7 @@ async function cambiarPassword(ip, email){
   modificar contraseña y eliminar codigo
   */
 }
-.
+
 //FUNCIONES PARA EL INGRESO
 async function ingresarUsuario(email, password) {
   const conx = await conexion.getConnection();
