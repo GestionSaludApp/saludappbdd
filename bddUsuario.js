@@ -3,26 +3,13 @@ const mysql = require('mysql2/promise');
 const { credenciales } = require("./credenciales.js");
 
 const nodemailer = require("nodemailer");
-
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: 'gestionsaludapp@gmail.com',
-    pass: 'gnjp upbj lina apwr'
+    user: credenciales.email.usuario,
+    pass: credenciales.email.password
   }
 });
-
-/*
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true, // true para puerto 465, false para 587
-  auth: {
-    user: 'gestionsaludapp@gmail.com',
-    pass: 'gnjp upbj lina apwr'
-  }
-});
-*/
 
 const conexion = mysql.createPool(credenciales.mysql);
 
@@ -226,6 +213,24 @@ async function registrarPerfilAdicional(ip, idUsuario, nuevoPerfil){
   }
 }
 
+//CAMBIAR CONTRASEÑA
+async function reiniciarPassword(ip, email){
+  /*
+  agregar codigo en el usuario cuyo email coincida
+  enviar email con link para cambiar contraseña
+  al apretar el link se solicita codigo y nueva contraseña y verificacion
+  en otra funcion se modifica la tabla eliminando el codigo y cambiando la contraseña
+  */
+}
+
+async function cambiarPassword(ip, email){
+  /*
+  buscar el usuario correspondiente en la tabla usuarios
+  verificar que el codigo coincide con lo ingresado y que NO ESTE VACIO
+  modificar contraseña y eliminar codigo
+  */
+}
+.
 //FUNCIONES PARA EL INGRESO
 async function ingresarUsuario(email, password) {
   const conx = await conexion.getConnection();
