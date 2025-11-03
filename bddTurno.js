@@ -229,6 +229,7 @@ async function agregarPerfilUsuario(conx, idUsuario, categoria, rol, alias) {
   return resultadoPerfilUsuario.insertId;
 }
 
+/*
 //INSERTAR UN REPORTE MEDICO
 async function agregarReporte(idUsuario, ip, nuevoReporte) {
   const fecha = obtenerFechaFormateada();
@@ -295,6 +296,74 @@ async function finalizarTurno(idUsuario, ip, idTurno) {
     throw new Error('No se pudo finalizar el turno');
   } finally {
     conexionLocal.release();
+  }
+}
+*/
+
+// INSERTAR REPORTE Y FINALIZAR TURNO EN UNA SOLA TRANSACCIÓN
+async function agregarReporte(idUsuario, ip, nuevoReporte) {
+  const fecha = obtenerFechaFormateada();
+  const conx = await conexion.getConnection();
+
+  try {
+    await conx.beginTransaction();
+
+    // 1. INSERTAR REPORTE
+    const sqlInsertReporte = `
+      INSERT INTO reportes (idPerfilPaciente, idPerfilProfesional, fecha, informe, imagen)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    const valoresReporte = [
+      nuevoReporte.idPerfilPaciente,
+      nuevoReporte.idPerfilProfesional,
+      fecha,
+      nuevoReporte.informe,
+      nuevoReporte.imagen
+    ];
+
+    const [resultadoReporte] = await conx.query(sqlInsertReporte, valoresReporte);
+    const idReporte = resultadoReporte.insertId;
+
+    // 2. COPIAR TURNO A turnosFinalizados
+    const sqlCopiarTurno = `
+      INSERT INTO turnosFinalizados (idTurno, idSeccional, idPerfilProfesional, idEspecialidad, diaSemana, horaInicio, horaFin, idPerfilPaciente, fechaFinalizacion)
+      SELECT idTurno, idSeccional, idPerfilProfesional, idEspecialidad, diaSemana, horaInicio, horaFin, idPerfilPaciente, ?
+      FROM turnos
+      WHERE idTurno = ?
+    `;
+    const [resCopiar] = await conx.query(sqlCopiarTurno, [fecha, nuevoReporte.idTurno]);
+
+    if (resCopiar.affectedRows === 0) {
+      throw new Error('No se encontró el turno para finalizar.');
+    }
+
+    // 3. ELIMINAR TURNO ORIGINAL
+    const sqlEliminarTurno = `DELETE FROM turnos WHERE idTurno = ?`;
+    const [resEliminar] = await conx.query(sqlEliminarTurno, [nuevoReporte.idTurno]);
+
+    if (resEliminar.affectedRows === 0) {
+      throw new Error('No se pudo eliminar el turno original.');
+    }
+
+    // 4. AUDITORÍA
+    auditarCambios(idUsuario, ip, `Se agregó el reporte ${idReporte} y se finalizó el turno ${nuevoReporte.idTurno}`);
+
+    // 5. CONFIRMAR TRANSACCIÓN
+    await conx.commit();
+
+    return {
+      exito: true,
+      mensaje: `Reporte ${idReporte} agregado y turno ${nuevoReporte.idTurno} finalizado correctamente.`,
+      idReporte,
+      idTurno: nuevoReporte.idTurno
+    };
+
+  } catch (error) {
+    await conx.rollback();
+    console.error('Error en agregarReporteYFinalizarTurno:', error);
+    throw new Error('No se pudo guardar el reporte y finalizar el turno: ' + error.message);
+  } finally {
+    conx.release();
   }
 }
 
