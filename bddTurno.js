@@ -35,17 +35,17 @@ async function obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana 
 
   if (idEspecialidad != null && idEspecialidad !== '') {
     query += ' AND idEspecialidad = ?';
-    params.push(Number(idEspecialidad));
+    params.push(idEspecialidad);
   }
 
   if (idSeccional != null && idSeccional !== '') {
     query += ' AND idSeccional = ?';
-    params.push(Number(idSeccional));
+    params.push(idSeccional);
   }
 
   if (diaSemana != null && diaSemana !== '') {
     query += ' AND diaSemana = ?';
-    params.push(Number(diaSemana));
+    params.push(diaSemana);
   }
 
   const [resultadoDisponibilidades] = await conexion.query(query, params);
