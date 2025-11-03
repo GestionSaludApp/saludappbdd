@@ -250,8 +250,8 @@ async function agregarReporte(idUsuario, ip, nuevoReporte) {
     const idReporte = resultadoReporte.insertId;
 
     if (resultadoReporte) {
-      auditarCambios(idUsuario, ip, 'Se agrego el reporte: ' + idReporte + ' sobre el paciente: ' + nuevoReporte.idPerfilPaciente);
       await finalizarTurno(idUsuario, ip, nuevoReporte.idTurno);
+      auditarCambios(idUsuario, ip, 'Se agrego el reporte: ' + idReporte + ' sobre el paciente: ' + nuevoReporte.idPerfilPaciente);
     }
 
     return resultadoReporte;
