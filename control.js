@@ -150,9 +150,9 @@ async function buscarTurnosPorUsuario(filtros) {
   }
 }
 
-async function solicitarTurno(turno) {
+async function solicitarTurno(turno, ip) {
   try {
-    const resultado = await bddTurno.solicitarTurno(turno);
+    const resultado = await bddTurno.solicitarTurno(turno, ip);
     return { valido: true, turno: resultado };
   } catch (error) {
     console.error('Error al solicitar turnos: ', error);

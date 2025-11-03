@@ -180,7 +180,8 @@ app.post('/buscarTurnosPorUsuario', async (req, res) => {
 //SOLICITAR TURNOS
 app.post('/solicitarTurno', async (req, res) => {
   const turno = req.body;
-  const resultado = await control.solicitarTurno(turno);
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  const resultado = await control.solicitarTurno(turno, ip);
 
   if (resultado.valido) {
     res.status(200).json({

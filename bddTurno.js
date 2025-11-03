@@ -146,7 +146,7 @@ async function obtenerTurnosPorUsuario({ idPerfil, idEspecialidad, idSeccional, 
 }
 
 // Función para insertar un turno
-async function solicitarTurno(turno) {
+async function solicitarTurno(turno, ip) {
   const disponible = await verificarDisponibilidadTurno(turno.idTurno);
 
   if (!disponible) {
@@ -201,7 +201,7 @@ async function solicitarTurno(turno) {
     'Se ha reservado exitosamente el turno.',
   );
 
-  auditarCambios(0, 0, 'Se solicitó el turno '+turno.idTurno+' para el paciente ' + turno.idPaciente);
+  auditarCambios(idUsuario, ip, 'Se solicitó el turno '+turno.idTurno+' para el paciente ' + turno.idPaciente);
 
   //Retorna un objeto que identifica el turno insertado
   return {
