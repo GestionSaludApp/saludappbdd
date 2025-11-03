@@ -177,6 +177,12 @@ async function obtenerTurnosPorUsuario({ idPerfil, idEspecialidad, idSeccional, 
   return resultado;
 }
 
+async function obtenerReportesPorPaciente(idPaciente) {
+  const query = 'SELECT * FROM reportes WHERE idPerfilPaciente = ?';
+  const [resultado] = await conexion.query(query, [idPaciente]);
+  return resultado.map(resultado => resultado);
+}
+
 // Función para insertar un turno
 async function solicitarTurno(turno, ip) {
   const disponible = await verificarDisponibilidadTurno(turno.idTurno);
@@ -522,5 +528,6 @@ module.exports = {
   solicitarTurno,
   cancelarTurno,
   finalizarTurno,
-  agregarReporte
+  agregarReporte,
+  obtenerReportesPorPaciente
 };

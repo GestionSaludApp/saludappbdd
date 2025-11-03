@@ -387,6 +387,19 @@ app.post('/agregarReporte', async (req, res) => {
   }
 });
 
+//BUSCAR REPORTES DEL PACIENTE
+app.post('/buscarReportesPorPaciente', async (req, res) => {
+  const idPaciente = req.body;
+
+  const resultado = await control.buscarReportesPorPaciente(idPaciente);
+
+  if (resultado.valido) {
+    res.status(200).json(resultado.reportes);
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});
+
 //ALMACENAR IMAGENES EN CLOUDINARY
 app.post('/guardarImagen', async (req, res) => {
   try {

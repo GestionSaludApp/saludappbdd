@@ -180,6 +180,16 @@ async function finalizarTurno(idUsuario, ip, idTurno){
   }
 }
 
+async function buscarReportesPorPaciente(idPaciente) {
+  try {
+    const resultado = await bddTurno.buscarReportesPorPaciente(idPaciente);
+    return { valido: true, reportes: resultado };
+  } catch (error) {
+    console.error('Error al consultar reportes:', error);
+    return { valido: false, mensaje: 'Error al consultar reportes' };
+  }
+}
+
 async function agregarEspecialidad(ip, idUsuario, nuevaEspecialidad){
   const camposObligatorios = [
     'nombre',
@@ -373,5 +383,6 @@ module.exports = {
   buscarSeccionales,
   modificarSeccional,
   eliminarSeccional,
-  agregarReporte
+  agregarReporte,
+  buscarReportesPorPaciente
 };
