@@ -1,4 +1,4 @@
-export const credenciales = {
+const credenciales = {
   mysql: {
     host: 'HOST',
     user: 'USUARIO',
@@ -15,3 +15,5 @@ export const credenciales = {
     password: "app password"
   }
 };
+
+module.exports = credenciales;

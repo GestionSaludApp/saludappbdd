@@ -42,7 +42,7 @@ async function registrarUsuario(ip, nuevoUsuario, nuevoPerfil) {
     enviarEmailRegistro(
       nuevoUsuario.email,
       'Bienvenido ' + nuevoPerfil.nombre + ' a SaludApp',
-      'Su codigo de activacion es: ',
+      'Su codigo de activacion sera: ',
       nuevoCodigo
     );
 
@@ -217,6 +217,24 @@ async function registrarPerfilAdicional(ip, idUsuario, nuevoPerfil){
   } finally {
     conx.release();
   }
+}
+
+//CAMBIAR CONTRASEÑA
+async function reiniciarPassword(ip, email){
+  /*
+  agregar codigo en el usuario cuyo email coincida
+  enviar email con link para cambiar contraseña
+  al apretar el link se solicita codigo y nueva contraseña y verificacion
+  en otra funcion se modifica la tabla eliminando el codigo y cambiando la contraseña
+  */
+}
+
+async function cambiarPassword(ip, email){
+  /*
+  buscar el usuario correspondiente en la tabla usuarios
+  verificar que el codigo coincide con lo ingresado y que NO ESTE VACIO
+  modificar contraseña y eliminar codigo
+  */
 }
 
 //FUNCIONES PARA EL INGRESO
@@ -441,7 +459,7 @@ async function enviarEmailRegistro(destinatario, asunto, mensaje, codigo) {
     `;
 
     await transporter.sendMail({
-      from: `"SaludApp" <${credenciales.email.user}>`,
+      from: `"SaludApp" <${credenciales.email.usuario}>`,
       to: destinatario,
       subject: asunto,
       html
@@ -457,7 +475,7 @@ async function enviarEmailRegistro(destinatario, asunto, mensaje, codigo) {
 async function enviarEmailGeneral(destinatario, asunto, mensaje) {
   try {
     const info = await transporter.sendMail({
-      from: `"SaludApp" <${credenciales.email.user}>`,
+      from: `"SaludApp" <${credenciales.email.usuario}>`,
       to: destinatario,
       subject: asunto,
       text: mensaje,
