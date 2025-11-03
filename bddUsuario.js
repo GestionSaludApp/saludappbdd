@@ -57,9 +57,6 @@ async function registrarUsuario(ip, nuevoUsuario, nuevoPerfil) {
 
 //ACTIVAR EL USUARIO
 async function activarUsuario(email, password, codigo, ip) {
-  console.log(email);
-  console.log(password);
-  console.log(codigo);
   const conexionLocal = await conexion.getConnection();
 
   try {
