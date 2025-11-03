@@ -3,6 +3,15 @@ const mysql = require('mysql2/promise');
 const { credenciales } = require("./credenciales.js");
 const conexion = mysql.createPool(credenciales.mysql);
 
+const nodemailer = require("nodemailer");
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: credenciales.email.usuario,
+    pass: credenciales.email.password
+  }
+});
+
 // Función para obtener disponibilidades con filtros opcionales
 /*
 async function obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana }) {
@@ -162,6 +171,12 @@ async function solicitarTurno(turno) {
 
   const [resultado] = await conexion.query(query, valores);
 
+  enviarEmailGeneral(
+    usuario.email,
+    'Reserva de turno',
+    'Se ha reservado exitosamente el turno.',
+  );
+
   auditarCambios(0, 0, 'Se solicitó el turno '+turno.idTurno+' para el paciente ' + turno.idPaciente);
 
   //Retorna un objeto que identifica el turno insertado
@@ -311,6 +326,23 @@ function formatearFechaParaIdTurno(fecha) {
   const m = String(fecha.getMonth() + 1).padStart(2, '0');
   const a = fecha.getFullYear();
   return `${d}${m}${a}`;
+}
+
+async function enviarEmailGeneral(destinatario, asunto, mensaje) {
+  try {
+    const info = await transporter.sendMail({
+      from: `"SaludApp" <${credenciales.email.usuario}>`,
+      to: destinatario,
+      subject: asunto,
+      text: mensaje,
+      html: `<p>${mensaje}</p>`
+    });
+
+    return true;
+  } catch (error) {
+    console.error("Error enviando email:", error);
+    return false;
+  }
 }
 
 module.exports = {
