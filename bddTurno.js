@@ -346,7 +346,7 @@ async function agregarReporte(idUsuario, ip, nuevoReporte) {
     }
 
     // 4. AUDITORÍA
-    auditarCambios(idUsuario, ip, `Se agregó el reporte ${idReporte} y se finalizó el turno ${nuevoReporte.idTurno}`);
+    auditarCambios(idUsuario, ip, 'Se agrego el reporte: ' + idReporte + ' sobre el paciente: ' + nuevoReporte.idPerfilPaciente);
 
     // 5. CONFIRMAR TRANSACCIÓN
     await conx.commit();
