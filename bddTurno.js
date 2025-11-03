@@ -71,6 +71,13 @@ async function obtenerTurnos({ idEspecialidad, idSeccional, diaSemana }) {
       continue; //la saltea
     }
 
+    // Obtener nombre y apellido del profesional
+    const [perfil] = await conexion.query(
+      'SELECT nombre, apellido FROM perfiles WHERE idPerfil = ?',
+      [disp.idPerfil]
+    );
+    const nombreProfesional = perfil[0] ? `${perfil[0].nombre} ${perfil[0].apellido}` : 'Desconocido';
+
     let hora = disp.horaInicio;
     while (hora + duracionTurno <= disp.horaFin) {
       //Generar fecha próxima del diaSemana
@@ -86,6 +93,7 @@ async function obtenerTurnos({ idEspecialidad, idSeccional, diaSemana }) {
         turnosDisponibles.push({
           idTurno,
           idProfesional: disp.idPerfil,
+          nombreProfesional: nombreProfesional,
           idEspecialidad: disp.idEspecialidad,
           idSeccional: disp.idSeccional,
           diaSemana: disp.diaSemana,
