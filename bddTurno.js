@@ -171,6 +171,30 @@ async function solicitarTurno(turno) {
 
   const [resultado] = await conexion.query(query, valores);
 
+  //buscar idUsuario del perfil del paciente
+  const [perfilRows] = await conexion.query(
+    'SELECT idUsuario FROM perfiles WHERE idPerfil = ?',
+    [turno.idPaciente]
+  );
+
+  if (!perfilRows.length) {
+    throw new Error('No se encontró el perfil del paciente.');
+  }
+
+  const idUsuario = perfilRows[0].idUsuario;
+
+  //Buscar email del usuario
+  const [usuarioRows] = await conexion.query(
+    'SELECT email FROM usuarios WHERE idUsuario = ?',
+    [idUsuario]
+  );
+
+  if (!usuarioRows.length) {
+    throw new Error('No se encontró el usuario asociado al perfil del paciente.');
+  }
+
+  const usuario = usuarioRows[0];
+
   enviarEmailGeneral(
     usuario.email,
     'Reserva de turno',
