@@ -251,7 +251,7 @@ async function agregarReporte(idUsuario, ip, nuevoReporte) {
 
     if (resultadoReporte) {
       auditarCambios(idUsuario, ip, 'Se agrego el reporte: ' + idReporte + ' sobre el paciente: ' + nuevoReporte.idPerfilPaciente);
-      finalizarTurno(idUsuario, ip, nuevoReporte.idTurno);
+      await finalizarTurno(idUsuario, ip, nuevoReporte.idTurno);
     }
 
     return resultadoReporte;
