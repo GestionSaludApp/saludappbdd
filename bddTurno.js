@@ -120,7 +120,7 @@ async function obtenerTurnos({ idEspecialidad, idSeccional, diaSemana }) {
 }
 
 //Obtiene turnos para las vistas de cronograma de usuarios
-async function obtenerTurnosPorUsuario({ idPerfil, idEspecialidad, idSeccional, diaSemana }) {
+async function obtenerTurnosPorUsuarioORIGINAL({ idPerfil, idEspecialidad, idSeccional, diaSemana }) {
   let query = `
     SELECT * 
     FROM turnos 
@@ -138,6 +138,38 @@ async function obtenerTurnosPorUsuario({ idPerfil, idEspecialidad, idSeccional, 
   }
   if (diaSemana) {
     query += " AND diaSemana = ?";
+    params.push(diaSemana);
+  }
+
+  const [resultado] = await conexion.query(query, params);
+  return resultado;
+}
+
+// Obtiene turnos para las vistas de cronograma de usuarios
+async function obtenerTurnosPorUsuario({ idPerfil, idEspecialidad, idSeccional, diaSemana }) {
+  let query = `
+    SELECT 
+      t.*, 
+      CONCAT(prof.nombre, ' ', prof.apellido) AS nombreProfesional,
+      CONCAT(pac.nombre, ' ', pac.apellido) AS nombrePaciente
+    FROM turnos t
+    LEFT JOIN perfiles prof ON t.idPerfilProfesional = prof.idPerfil
+    LEFT JOIN perfiles pac ON t.idPerfilPaciente = pac.idPerfil
+    WHERE (t.idPerfilPaciente = ? OR t.idPerfilProfesional = ?)
+  `;
+  
+  const params = [idPerfil, idPerfil];
+
+  if (idEspecialidad) {
+    query += " AND t.idEspecialidad = ?";
+    params.push(idEspecialidad);
+  }
+  if (idSeccional) {
+    query += " AND t.idSeccional = ?";
+    params.push(idSeccional);
+  }
+  if (diaSemana) {
+    query += " AND t.diaSemana = ?";
     params.push(diaSemana);
   }
 
@@ -413,7 +445,6 @@ async function cancelarTurno(idUsuario, ip, idTurno) {
 }
 
 //FUNCIONES GENERALES
-
 async function auditarCambios(idUsuario, ip, cambio) {
   const conx = await conexion.getConnection();
   const fecha = obtenerFechaFormateada();
