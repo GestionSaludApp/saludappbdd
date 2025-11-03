@@ -263,6 +263,7 @@ async function agregarReporte(idUsuario, ip, nuevoReporte) {
     finalizarTurno(idUsuario, ip, nuevoReporte.idTurno);
   }
 }
+*/
 
 //FINALIZAR UN TURNO
 async function finalizarTurno(idUsuario, ip, idTurno) {
@@ -298,7 +299,6 @@ async function finalizarTurno(idUsuario, ip, idTurno) {
     conexionLocal.release();
   }
 }
-*/
 
 // INSERTAR REPORTE Y FINALIZAR TURNO EN UNA SOLA TRANSACCIÓN
 async function agregarReporte(idUsuario, ip, nuevoReporte) {
