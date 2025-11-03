@@ -298,6 +298,51 @@ async function finalizarTurno(idUsuario, ip, idTurno) {
   }
 }
 
+//CANCELAR UN TURNO
+async function cancelarTurno(idUsuario, ip, idTurno) {
+  const fecha = obtenerFechaFormateada();
+  const conexionLocal = await conexion.getConnection();
+
+  try {
+    await conexionLocal.beginTransaction();
+
+    const queryEliminar = `DELETE FROM turnos WHERE idTurno = ?`;
+    await conexionLocal.query(queryEliminar, [idTurno]);
+
+    //Buscar email del usuario
+    const [usuarioRows] = await conexion.query(
+      'SELECT email FROM usuarios WHERE idUsuario = ?',
+      [idUsuario]
+    );
+
+    if (!usuarioRows.length) {
+      throw new Error('No se encontró el usuario asociado al perfil del paciente.');
+    }
+
+    const usuario = usuarioRows[0];
+
+    enviarEmailGeneral(
+      usuario.email,
+      'Cancelación de turno',
+      'Se ha cancelado su turno.',
+    );
+
+    auditarCambios(idUsuario, ip, 'Se canceló el turno ' + idTurno);
+
+    await conexionLocal.commit();
+
+    return {
+      mensaje: 'Turno cancelado exitosamente'
+    };
+  } catch (error) {
+    await conexionLocal.rollback();
+    console.error('Error al cancelar turno:', error);
+    throw new Error('No se pudo cancelar el turno');
+  } finally {
+    conexionLocal.release();
+  }
+}
+
 //FUNCIONES GENERALES
 
 async function auditarCambios(idUsuario, ip, cambio) {
