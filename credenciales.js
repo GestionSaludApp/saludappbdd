@@ -14,7 +14,8 @@ const credenciales = {
     usuario: 'gestionsaludapp@gmail.com',
     password: 'gnjp upbj lina apwr'
   },
-  urlFront: 'https://salud-app-front.vercel.app'
+  urlFront: 'https://front-ultima-version.vercel.app'
 };
+
 
 module.exports = { credenciales };
