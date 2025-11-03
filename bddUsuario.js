@@ -57,6 +57,9 @@ async function registrarUsuario(ip, nuevoUsuario, nuevoPerfil) {
 
 //ACTIVAR EL USUARIO
 async function activarUsuario(email, password, codigo, ip) {
+  console.log(email);
+  console.log(password);
+  console.log(codigo);
   const conexionLocal = await conexion.getConnection();
 
   try {
@@ -74,19 +77,22 @@ async function activarUsuario(email, password, codigo, ip) {
     }
 
     const querySelect = `
-      SELECT idUsuario
+      SELECT idUsuario, email
       FROM usuarios
       WHERE email = ? AND estado = 'activo'
       LIMIT 1
     `;
 
-    const [idUsuario] = await conexionLocal.query(querySelect, [email, codigo]);
+    const [filas] = await conexionLocal.query(querySelect, [email]);
+    if (filas.length === 0) return { ok: false, idUsuario: null };
 
-    auditarCambios(idUsuario, ip, 'Se activo el usuario '+idUsuario);
+    const usuario = filas[0];
+
+    auditarCambios(usuario.idUsuario, ip, 'Se activo el usuario '+usuario.idUsuario);
 
     enviarEmailGeneral(
-      nuevoUsuario.email,
-      'Bienvenido ' + nuevoPerfil.nombre + ' a SaludApp',
+      usuario.email,
+      'Bienvenido a SaludApp',
       'Ha activado su usuario exitosamente.',
     );
 
@@ -215,6 +221,8 @@ async function registrarPerfilAdicional(ip, idUsuario, nuevoPerfil){
 
 //FUNCIONES PARA EL INGRESO
 async function ingresarUsuario(email, password) {
+  console.log(email);
+  console.log(password);
   const conx = await conexion.getConnection();
 
   try {

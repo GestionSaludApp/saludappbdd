@@ -4,6 +4,7 @@ const { credenciales } = require("./credenciales.js");
 const conexion = mysql.createPool(credenciales.mysql);
 
 // Función para obtener disponibilidades con filtros opcionales
+/*
 async function obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana }) {
   let query = 'SELECT * FROM disponibilidades WHERE 1=1';
   const params = [];
@@ -21,6 +22,30 @@ async function obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana 
   if (diaSemana !== undefined) {
     query += ' AND diaSemana = ?';
     params.push(diaSemana);
+  }
+
+  const [resultadoDisponibilidades] = await conexion.query(query, params);
+  return resultadoDisponibilidades;
+}
+*/
+
+async function obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana } = {}) {
+  let query = 'SELECT * FROM disponibilidades WHERE 1=1';
+  const params = [];
+
+  if (idEspecialidad != null && idEspecialidad !== '') {
+    query += ' AND idEspecialidad = ?';
+    params.push(Number(idEspecialidad));
+  }
+
+  if (idSeccional != null && idSeccional !== '') {
+    query += ' AND idSeccional = ?';
+    params.push(Number(idSeccional));
+  }
+
+  if (diaSemana != null && diaSemana !== '') {
+    query += ' AND diaSemana = ?';
+    params.push(Number(diaSemana));
   }
 
   const [resultadoDisponibilidades] = await conexion.query(query, params);
