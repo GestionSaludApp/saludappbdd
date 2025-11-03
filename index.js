@@ -195,6 +195,44 @@ app.post('/solicitarTurno', async (req, res) => {
   }
 });
 
+//CANCELAR TURNOS
+app.post('/cancelarTurno', async (req, res) => {
+  try {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const { idUsuario, idTurno } = req.body;
+
+    const resultado = await control.cancelarTurno(idUsuario, ip, idTurno);
+
+    if (!resultado.valido) {
+      return res.status(400).json({ mensaje: resultado.mensaje });
+    }
+
+    res.status(200).json({ mensaje: 'Turno cancelado correctamente', resultado: resultado.resultado });
+  } catch (err) {
+    console.error('Error interno en cancelar turno:', err);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+});
+
+//FINALIZAR TURNOS
+app.post('/finalizarTurno', async (req, res) => {
+  try {
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    const { idUsuario, idTurno } = req.body;
+
+    const resultado = await control.finalizarTurno(idUsuario, ip, idTurno);
+
+    if (!resultado.valido) {
+      return res.status(400).json({ mensaje: resultado.mensaje });
+    }
+
+    res.status(200).json({ mensaje: 'Turno finalizado correctamente', resultado: resultado.resultado });
+  } catch (err) {
+    console.error('Error interno en finalizar turno:', err);
+    res.status(500).json({ mensaje: 'Error interno del servidor' });
+  }
+});
+
 //AGREGAR ESPECIALIDADES
 app.post('/agregarEspecialidad', async (req, res) => {
   try {

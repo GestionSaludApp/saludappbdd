@@ -160,6 +160,26 @@ async function solicitarTurno(turno) {
   }
 }
 
+async function cancelarTurno(idUsuario, ip, idTurno){
+  try {
+    const resultado = await bddTurno.cancelarTurno(idUsuario, ip, idTurno);
+    return { valido: true, resultado };
+  } catch (error) {
+    console.error('Error al cancelar el turno:', error);
+    return { valido: false, mensaje: 'Error al modificar base de datos.' };
+  }
+}
+
+async function finalizarTurno(idUsuario, ip, idTurno){
+  try {
+    const resultado = await bddTurno.finalizarTurno(idUsuario, ip, idTurno);
+    return { valido: true, resultado };
+  } catch (error) {
+    console.error('Error al finalizar el turno:', error);
+    return { valido: false, mensaje: 'Error al modificar base de datos.' };
+  }
+}
+
 async function agregarEspecialidad(ip, idUsuario, nuevaEspecialidad){
   const camposObligatorios = [
     'nombre',
@@ -343,6 +363,8 @@ module.exports = {
   buscarTurnos,
   buscarTurnosPorUsuario,
   solicitarTurno,
+  cancelarTurno,
+  finalizarTurno,
   agregarEspecialidad,
   buscarEspecialidades,
   editarEspecialidad,

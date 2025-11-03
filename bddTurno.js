@@ -420,6 +420,7 @@ module.exports = {
   obtenerTurnos,
   obtenerTurnosPorUsuario,
   solicitarTurno,
+  cancelarTurno,
   finalizarTurno,
   agregarReporte
 };
