@@ -324,6 +324,39 @@ async function buscarPendientes() {
   return pendientes;
 }
 
+async function cambiarEstado(tabla, id, nuevoEstado) {
+
+  let campoId = '';
+
+  switch (tabla) {
+    case 'Usuarios':
+      campoId = 'idUsuario';
+      break;
+    case 'Perfiles':
+      campoId = 'idPerfil';
+      break;
+    case 'Especialidades':
+      campoId = 'idEspecialidad';
+      break;
+    case 'Seccionales':
+      campoId = 'idSeccional';
+      break;
+    case 'Turnos':
+      campoId = 'idTurno';
+      break;
+    default:
+      throw new Error('Tabla no permitida');
+  }
+
+  const query = `
+    UPDATE ${tabla}
+    SET estado = ?
+    WHERE ${campoId} = ?
+  `;
+
+  await conexion.query(query, [nuevoEstado, id]);
+}
+
 // OBTENER PERFILES ACTIVOS POR PERMISO
 async function buscarPerfilesPorPermiso() {
 
@@ -396,5 +429,6 @@ module.exports = {
   eliminarSeccional,
   buscarAuditoria,
   buscarPendientes,
+  cambiarEstado,
   buscarPerfilesPorPermiso
 };

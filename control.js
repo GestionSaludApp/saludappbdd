@@ -415,6 +415,30 @@ async function buscarPendientes() {
   }
 }
 
+async function cambiarEstado(tabla, id, nuevoEstado) {
+
+  if (!tabla || id === undefined || !nuevoEstado) {
+    return {
+      valido: false,
+      mensaje: 'Datos incompletos'
+    };
+  }
+
+  try {
+    await bddGestion.cambiarEstado(tabla, id, nuevoEstado);
+
+    return {
+      valido: true
+    };
+  } catch (error) {
+    return {
+      valido: false,
+      mensaje: error.message
+    };
+  }
+}
+
+
 async function buscarPerfilesPorPermiso() {
   try {
     const perfiles = await bddGestion.buscarPerfilesPorPermiso();
@@ -459,5 +483,6 @@ module.exports = {
   buscarReportesPorPaciente,
   buscarAuditoria,
   buscarPendientes,
-  buscarPerfilesPorPermiso
+  buscarPerfilesPorPermiso,
+  cambiarEstado
 };

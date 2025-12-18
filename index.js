@@ -425,6 +425,20 @@ app.post('/buscarPendientes', async (req, res) => {
   }
 });
 
+//ACTUALIZAR HABILITACIONES
+app.post('/cambiarEstado', async (req, res) => {
+
+  const { tabla, id, nuevoEstado } = req.body;
+
+  const resultado = await control.cambiarEstado(tabla, id, nuevoEstado);
+
+  if (resultado.valido) {
+    res.status(200).json({ ok: true });
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});
+
 // BUSCAR PERFILES ACTIVOS POR PERMISO
 app.post('/buscarPerfilesPorPermiso', async (req, res) => {
 
