@@ -177,7 +177,7 @@ async function obtenerTurnosPorUsuario({ idPerfil, idEspecialidad, idSeccional, 
   return resultado;
 }
 
-async function obtenerReportesPorPaciente(idPaciente) {
+async function buscarReportesPorPaciente(idPaciente) {
   const query = 'SELECT * FROM reportes WHERE idPerfilPaciente = ?';
   const [resultado] = await conexion.query(query, [idPaciente]);
   return resultado.map(resultado => resultado);
@@ -529,5 +529,5 @@ module.exports = {
   cancelarTurno,
   finalizarTurno,
   agregarReporte,
-  obtenerReportesPorPaciente
+  buscarReportesPorPaciente
 };
