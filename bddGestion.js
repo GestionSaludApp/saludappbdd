@@ -374,9 +374,9 @@ async function buscarPerfilesPorPermiso() {
   `);
 
   perfiles.forEach(p => {
-    if (p.idPermiso === 1) resultado.permiso1.push(p);
-    else if (p.idPermiso === 2) resultado.permiso2.push(p);
-    else if (p.idPermiso === 3) resultado.permiso3.push(p);
+    if (p.idPermisos === 1) resultado.permiso1.push(p);
+    else if (p.idPermisos === 2) resultado.permiso2.push(p);
+    else if (p.idPermisos === 3) resultado.permiso3.push(p);
   });
 
   return resultado;
