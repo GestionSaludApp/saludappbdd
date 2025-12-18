@@ -261,6 +261,94 @@ async function buscarAuditoria(cantidad = 0) {
   return resultadoAuditoria;
 }
 
+// OBTENER REGISTROS PENDIENTES
+async function buscarPendientes() {
+
+  const pendientes = {
+    especialidades: [],
+    perfiles: [],
+    seccionales: [],
+    turnos: [],
+    usuarioPerfiles: [],
+    usuarios: []
+  };
+
+  // Especialidades
+  const [especialidades] = await conexion.query(`
+    SELECT *, 'especialidades' AS origen
+    FROM especialidades
+    WHERE estado = 'pendiente'
+  `);
+  pendientes.especialidades = especialidades;
+
+  // Perfiles
+  const [perfiles] = await conexion.query(`
+    SELECT *, 'perfiles' AS origen
+    FROM perfiles
+    WHERE estado = 'pendiente'
+  `);
+  pendientes.perfiles = perfiles;
+
+  // Seccionales
+  const [seccionales] = await conexion.query(`
+    SELECT *, 'seccionales' AS origen
+    FROM seccionales
+    WHERE estado = 'pendiente'
+  `);
+  pendientes.seccionales = seccionales;
+
+  // Turnos
+  const [turnos] = await conexion.query(`
+    SELECT *, 'turnos' AS origen
+    FROM turnos
+    WHERE estado = 'pendiente'
+  `);
+  pendientes.turnos = turnos;
+
+  // UsuarioPerfiles
+  const [usuarioPerfiles] = await conexion.query(`
+    SELECT *, 'usuarioPerfiles' AS origen
+    FROM usuarioPerfiles
+    WHERE estado = 'pendiente'
+  `);
+  pendientes.usuarioPerfiles = usuarioPerfiles;
+
+  // Usuarios
+  const [usuarios] = await conexion.query(`
+    SELECT *, 'usuarios' AS origen
+    FROM usuarios
+    WHERE estado = 'pendiente'
+  `);
+  pendientes.usuarios = usuarios;
+
+  return pendientes;
+}
+
+// OBTENER PERFILES ACTIVOS POR PERMISO
+async function buscarPerfilesPorPermiso() {
+
+  const resultado = {
+    permiso1: [],
+    permiso2: [],
+    permiso3: []
+  };
+
+  const [perfiles] = await conexion.query(`
+    SELECT *
+    FROM perfiles
+    WHERE estado = 'activo'
+      AND idPermiso IN (1, 2, 3)
+  `);
+
+  perfiles.forEach(p => {
+    if (p.idPermiso === 1) resultado.permiso1.push(p);
+    else if (p.idPermiso === 2) resultado.permiso2.push(p);
+    else if (p.idPermiso === 3) resultado.permiso3.push(p);
+  });
+
+  return resultado;
+}
+
 //FUNCIONES GENERALES
 async function auditarCambios(idUsuario, ip, cambio) {
   const conx = await conexion.getConnection();
@@ -306,5 +394,7 @@ module.exports = {
   buscarSeccionales,
   modificarSeccional,
   eliminarSeccional,
-  buscarAuditoria
+  buscarAuditoria,
+  buscarPendientes,
+  buscarPerfilesPorPermiso
 };

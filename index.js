@@ -413,6 +413,30 @@ app.post('/buscarAuditoria', async (req, res) => {
   }
 });
 
+// BUSCAR REGISTROS PENDIENTES
+app.post('/buscarPendientes', async (req, res) => {
+
+  const resultado = await control.buscarPendientes();
+
+  if (resultado.valido) {
+    res.status(200).json(resultado.pendientes);
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});
+
+// BUSCAR PERFILES ACTIVOS POR PERMISO
+app.post('/buscarPerfilesPorPermiso', async (req, res) => {
+
+  const resultado = await control.buscarPerfilesPorPermiso();
+
+  if (resultado.valido) {
+    res.status(200).json(resultado.perfiles);
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});
+
 //ALMACENAR IMAGENES EN CLOUDINARY
 app.post('/guardarImagen', async (req, res) => {
   try {

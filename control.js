@@ -396,6 +396,44 @@ async function buscarAuditoria(cantidad) {
   }
 }
 
+async function buscarPendientes() {
+  try {
+    const pendientes = await bddGestion.buscarPendientes();
+
+    return {
+      valido: true,
+      pendientes
+    };
+
+  } catch (error) {
+    console.error('Error al buscar pendientes:', error);
+
+    return {
+      valido: false,
+      mensaje: 'Error al obtener registros pendientes'
+    };
+  }
+}
+
+async function buscarPerfilesPorPermiso() {
+  try {
+    const perfiles = await bddGestion.buscarPerfilesPorPermiso();
+
+    return {
+      valido: true,
+      perfiles
+    };
+
+  } catch (error) {
+    console.error('Error al buscar perfiles por permiso:', error);
+
+    return {
+      valido: false,
+      mensaje: 'Error al obtener perfiles por permiso'
+    };
+  }
+}
+
 module.exports = {
   verificarNuevoUsuario,
   verificarUsuario,
@@ -419,5 +457,7 @@ module.exports = {
   eliminarSeccional,
   agregarReporte,
   buscarReportesPorPaciente,
-  buscarAuditoria
+  buscarAuditoria,
+  buscarPendientes,
+  buscarPerfilesPorPermiso
 };
