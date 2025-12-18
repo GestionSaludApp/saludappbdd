@@ -389,7 +389,7 @@ app.post('/agregarReporte', async (req, res) => {
 
 //BUSCAR REPORTES DEL PACIENTE
 app.post('/buscarReportesPorPaciente', async (req, res) => {
-  const idPaciente = req.body;
+  const { idPaciente } = req.body;
 
   const resultado = await control.buscarReportesPorPaciente(idPaciente);
 
