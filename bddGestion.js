@@ -329,19 +329,19 @@ async function cambiarEstado(tabla, id, nuevoEstado) {
   let campoId = '';
 
   switch (tabla) {
-    case 'Usuarios':
+    case 'usuarios':
       campoId = 'idUsuario';
       break;
-    case 'Perfiles':
+    case 'perfiles':
       campoId = 'idPerfil';
       break;
-    case 'Especialidades':
+    case 'especialidades':
       campoId = 'idEspecialidad';
       break;
-    case 'Seccionales':
+    case 'seccionales':
       campoId = 'idSeccional';
       break;
-    case 'Turnos':
+    case 'turnos':
       campoId = 'idTurno';
       break;
     default:
