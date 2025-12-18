@@ -362,6 +362,40 @@ async function agregarReporte(idUsuario, ip, nuevoReporte){
   }
 }
 
+// BUSCAR AUDITORIA
+async function buscarAuditoria(cantidad) {
+  try {
+    // Normalización
+    if (cantidad === undefined || cantidad === null) {
+      cantidad = 0;
+    }
+
+    cantidad = Number(cantidad);
+
+    if (isNaN(cantidad) || cantidad < 0) {
+      return {
+        valido: false,
+        mensaje: 'La cantidad debe ser un número mayor o igual a 0'
+      };
+    }
+
+    const auditoria = await bddGestion.buscarAuditoria(cantidad);
+
+    return {
+      valido: true,
+      auditoria
+    };
+
+  } catch (error) {
+    console.error('Error en buscarAuditoria:', error);
+
+    return {
+      valido: false,
+      mensaje: 'Error al obtener la auditoría'
+    };
+  }
+}
+
 module.exports = {
   verificarNuevoUsuario,
   verificarUsuario,
@@ -384,5 +418,6 @@ module.exports = {
   modificarSeccional,
   eliminarSeccional,
   agregarReporte,
-  buscarReportesPorPaciente
+  buscarReportesPorPaciente,
+  buscarAuditoria
 };

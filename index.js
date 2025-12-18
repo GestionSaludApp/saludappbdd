@@ -400,6 +400,19 @@ app.post('/buscarReportesPorPaciente', async (req, res) => {
   }
 });
 
+// BUSCAR AUDITORIA
+app.post('/buscarAuditoria', async (req, res) => {
+  const { cantidad } = req.body;
+
+  const resultado = await control.buscarAuditoria(cantidad);
+
+  if (resultado.valido) {
+    res.status(200).json(resultado.auditoria);
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});
+
 //ALMACENAR IMAGENES EN CLOUDINARY
 app.post('/guardarImagen', async (req, res) => {
   try {

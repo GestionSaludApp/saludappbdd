@@ -233,6 +233,34 @@ async function eliminarSeccional(ip, idUsuario, datosSeccional) {
   }
 }
 
+//OBTENER AUDITORÍA
+async function buscarAuditoria(cantidad = 0) {
+
+  let query = `
+    SELECT 
+      a.idAuditoria,
+      a.fecha,
+      a.idUsuario,
+      a.IP,
+      a.cambio,
+      CONCAT(p.nombre, ' ', p.apellido) AS nombreUsuario
+    FROM auditoria a
+    LEFT JOIN perfiles p ON a.idUsuario = p.idUsuario
+    ORDER BY a.fecha DESC
+  `;
+
+  const params = [];
+
+  if (cantidad > 0) {
+    query += ' LIMIT ?';
+    params.push(Number(cantidad));
+  }
+
+  const [resultadoAuditoria] = await conexion.query(query, params);
+
+  return resultadoAuditoria;
+}
+
 //FUNCIONES GENERALES
 async function auditarCambios(idUsuario, ip, cambio) {
   const conx = await conexion.getConnection();
@@ -277,5 +305,6 @@ module.exports = {
   agregarSeccional,
   buscarSeccionales,
   modificarSeccional,
-  eliminarSeccional
+  eliminarSeccional,
+  buscarAuditoria
 };
