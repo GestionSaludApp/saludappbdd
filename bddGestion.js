@@ -370,7 +370,7 @@ async function buscarPerfilesPorPermiso() {
     SELECT *
     FROM perfiles
     WHERE estado = 'activo'
-      AND idPermiso IN (1, 2, 3)
+      AND idPermisos IN (1, 2, 3)
   `);
 
   perfiles.forEach(p => {
