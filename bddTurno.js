@@ -177,10 +177,32 @@ async function obtenerTurnosPorUsuario({ idPerfil, idEspecialidad, idSeccional, 
   return resultado;
 }
 
+/*
 async function buscarReportesPorPaciente(idPaciente) {
   const query = 'SELECT * FROM reportes WHERE idPerfilPaciente = ?';
   const [resultado] = await conexion.query(query, [idPaciente]);
   return resultado.map(resultado => resultado);
+}
+*/
+
+//Busca los reportes de un paciente en particular
+async function buscarReportesPorPaciente(idPaciente) {
+  const query = `
+    SELECT
+      r.*,
+      CONCAT(pac.nombre, ' ', pac.apellido) AS nombrePaciente,
+      CONCAT(prof.nombre, ' ', prof.apellido) AS nombreProfesional,
+      prof.especialidad AS especialidad
+    FROM reportes r
+    JOIN perfiles pac
+      ON pac.idPerfil = r.idPerfilPaciente
+    JOIN perfiles prof
+      ON prof.idPerfil = r.idPerfilProfesional
+    WHERE r.idPerfilPaciente = ?
+  `;
+
+  const [resultado] = await conexion.query(query, [idPaciente]);
+  return resultado;
 }
 
 // Función para insertar un turno
