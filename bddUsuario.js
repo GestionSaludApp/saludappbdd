@@ -236,8 +236,8 @@ async function cambiarPassword(ip, email){
 
 //FUNCIONES PARA EL INGRESO
 async function ingresarUsuario(email, password) {
-  console.log(email);
-  console.log(password);
+  email = email.trim();
+  password = password.trim();
   const conx = await conexion.getConnection();
 
   try {
