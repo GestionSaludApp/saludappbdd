@@ -381,6 +381,24 @@ async function agregarReporte(idUsuario, ip, nuevoReporte){
   }
 }
 
+async function cambiarSituacionTurno(idTurno, situacion) {
+  try {
+    await bddTurno.cambiarSituacionTurno(idTurno, situacion);
+
+    return {
+      valido: true
+    };
+
+  } catch (error) {
+    console.error('Error al cambiar situación del turno:', error);
+
+    return {
+      valido: false,
+      mensaje: 'Error al cambiar la situación del turno'
+    };
+  }
+}
+
 // BUSCAR AUDITORIA
 async function buscarAuditoria(cantidad) {
   try {
@@ -504,5 +522,6 @@ module.exports = {
   buscarPendientes,
   buscarPerfilesPorPermiso,
   cambiarEstado,
-  buscarProfesionalesPorPaciente
+  buscarProfesionalesPorPaciente,
+  cambiarSituacionTurno
 };

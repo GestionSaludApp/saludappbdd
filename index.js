@@ -247,6 +247,19 @@ app.post('/buscarProfesionalesPorPaciente', async (req, res) => {
   }
 });
 
+//CAMBIAR SITUACIÓN DEL TURNO
+app.post('/cambiarSituacionTurno', async (req, res) => {
+  const { idTurno, situacion } = req.body;
+
+  const resultado = await control.cambiarSituacionTurno(idTurno, situacion);
+
+  if (resultado.valido) {
+    res.status(200).json({ ok: true });
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});
+
 //AGREGAR ESPECIALIDADES
 app.post('/agregarEspecialidad', async (req, res) => {
   try {

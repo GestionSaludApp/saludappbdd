@@ -304,42 +304,6 @@ async function agregarPerfilUsuario(conx, idUsuario, categoria, rol, alias) {
   return resultadoPerfilUsuario.insertId;
 }
 
-/*
-//INSERTAR UN REPORTE MEDICO
-async function agregarReporte(idUsuario, ip, nuevoReporte) {
-  const fecha = obtenerFechaFormateada();
-  const sql = `
-    INSERT INTO reportes (idPerfilPaciente, idPerfilProfesional, fecha, informe, imagen)
-    VALUES (?, ?, ?, ?, ?)
-  `;
-  const valores = [
-    nuevoReporte.idPerfilPaciente,
-    nuevoReporte.idPerfilProfesional,
-    fecha,
-    nuevoReporte.informe,
-    nuevoReporte.imagen
-  ];
-
-  const conx = await conexion.getConnection();
-  try {
-    const [resultadoReporte] = await conx.query(sql, valores);
-    const idReporte = resultadoReporte.insertId;
-
-    if (resultadoReporte) {
-      auditarCambios(idUsuario, ip, 'Se agrego el reporte: ' + idReporte + ' sobre el paciente: ' + nuevoReporte.idPerfilPaciente);
-    }
-
-    return resultadoReporte;
-  } catch (err) {
-    console.error('Error al crear el reporte: ', err.sqlMessage || err);
-    throw err;
-  } finally {
-    conx.release();
-    finalizarTurno(idUsuario, ip, nuevoReporte.idTurno);
-  }
-}
-*/
-
 //FINALIZAR UN TURNO
 async function finalizarTurno(idUsuario, ip, idTurno) {
   const fecha = obtenerFechaFormateada();
@@ -487,6 +451,18 @@ async function cancelarTurno(idUsuario, ip, idTurno) {
   }
 }
 
+// ACTUALIZAR SITUACIÓN DEL TURNO
+async function cambiarSituacionTurno(idTurno, situacion) {
+
+  const query = `
+    UPDATE turnos
+    SET situacion = ?
+    WHERE idTurno = ?
+  `;
+
+  await conexion.query(query, [situacion, idTurno]);
+}
+
 //FUNCIONES GENERALES
 async function auditarCambios(idUsuario, ip, cambio) {
   const conx = await conexion.getConnection();
@@ -567,5 +543,6 @@ module.exports = {
   finalizarTurno,
   agregarReporte,
   buscarReportesPorPaciente,
-  buscarProfesionalesPorPaciente
+  buscarProfesionalesPorPaciente,
+  cambiarSituacionTurno
 };
