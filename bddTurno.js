@@ -168,6 +168,23 @@ async function obtenerTurnosPorUsuarioORIGINAL({ idPerfil, idEspecialidad, idSec
   return resultado;
 }
 
+// OBTENER TODOS LOS TURNOS ACTIVOS (SIN FILTROS)
+async function obtenerTurnosActivos() {
+  const query = `
+    SELECT 
+      t.*,
+      CONCAT(prof.nombre, ' ', prof.apellido) AS nombreProfesional,
+      CONCAT(pac.nombre, ' ', pac.apellido) AS nombrePaciente
+    FROM turnos t
+    LEFT JOIN perfiles prof ON t.idPerfilProfesional = prof.idPerfil
+    LEFT JOIN perfiles pac ON t.idPerfilPaciente = pac.idPerfil
+    WHERE t.estado = 'activo'
+  `;
+
+  const [resultado] = await conexion.query(query);
+  return resultado;
+}
+
 // Obtiene turnos para las vistas de cronograma de usuarios
 async function obtenerTurnosPorUsuario({ idPerfil, idEspecialidad, idSeccional, diaSemana }) {
   let query = `
@@ -537,6 +554,7 @@ module.exports = {
   obtenerDisponibilidades,
   obtenerPerfilesPorEspecialidad,
   obtenerTurnos,
+  obtenerTurnosActivos,
   obtenerTurnosPorUsuario,
   solicitarTurno,
   cancelarTurno,

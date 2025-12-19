@@ -140,6 +140,22 @@ async function buscarTurnos(filtros) {
   }
 }
 
+async function obtenerTurnosActivos() {
+  try {
+    const turnos = await bddTurno.obtenerTurnosActivos();
+    return {
+      valido: true,
+      turnos
+    };
+  } catch (error) {
+    console.error('Error al obtener turnos activos:', error);
+    return {
+      valido: false,
+      mensaje: 'Error al obtener turnos activos'
+    };
+  }
+}
+
 async function buscarTurnosPorUsuario(filtros) {
   try {
     const resultado = await bddTurno.obtenerTurnosPorUsuario(filtros);
@@ -504,6 +520,7 @@ module.exports = {
   ingresarPerfil,
   buscarDisponibilidades,
   buscarTurnos,
+  obtenerTurnosActivos,
   buscarTurnosPorUsuario,
   solicitarTurno,
   cancelarTurno,

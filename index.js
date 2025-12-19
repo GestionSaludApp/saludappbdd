@@ -164,6 +164,17 @@ app.post('/buscarTurnos', async (req, res) => {
   }
 });
 
+// OBTENER TODOS LOS TURNOS ACTIVOS
+app.post('/obtenerTurnosActivos', async (req, res) => {
+  const resultado = await control.obtenerTurnosActivos();
+
+  if (resultado.valido) {
+    res.status(200).json(resultado.turnos);
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});
+
 //BUSCAR TURNOS DEL USUARIO
 app.post('/buscarTurnosPorUsuario', async (req, res) => {
   const filtros = req.body;
