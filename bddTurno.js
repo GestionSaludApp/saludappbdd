@@ -477,8 +477,15 @@ async function cambiarSituacionTurno(idTurno, situacion) {
     WHERE idTurno = ?
   `;
 
+  // 1. Actualiza la situación
   await conexion.query(query, [situacion, idTurno]);
+
+  // 2. Si fue abandonado, cancelar turno
+  if (situacion === 'abandonado') {
+    await cancelarTurno('Administracion', 'Sistema', idTurno);
+  }
 }
+
 
 //FUNCIONES GENERALES
 async function auditarCambios(idUsuario, ip, cambio) {
