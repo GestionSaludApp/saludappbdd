@@ -38,7 +38,7 @@ async function obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana 
 }
 */
 
-async function obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana } = {}) {
+async function obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana, idPerfil } = {}) {
   let query = 'SELECT * FROM disponibilidades WHERE 1=1';
   const params = [];
 
@@ -57,13 +57,18 @@ async function obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana 
     params.push(diaSemana);
   }
 
+  if (idPerfil != null && idPerfil !== '') {
+    query += ' AND idPerfil = ?';
+    params.push(idPerfil);
+  }
+
   const [resultadoDisponibilidades] = await conexion.query(query, params);
   return resultadoDisponibilidades;
 }
 
-async function obtenerTurnos({ idEspecialidad, idSeccional, diaSemana }) {
+async function obtenerTurnos({ idEspecialidad, idSeccional, diaSemana, idPerfil }) {
   //Obtener disponibilidades filtradas
-  const disponibilidades = await obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana });
+  const disponibilidades = await obtenerDisponibilidades({ idEspecialidad, idSeccional, diaSemana, idPerfil });
 
   const turnosDisponibles = [];
 
@@ -176,14 +181,6 @@ async function obtenerTurnosPorUsuario({ idPerfil, idEspecialidad, idSeccional, 
   const [resultado] = await conexion.query(query, params);
   return resultado;
 }
-
-/*
-async function buscarReportesPorPaciente(idPaciente) {
-  const query = 'SELECT * FROM reportes WHERE idPerfilPaciente = ?';
-  const [resultado] = await conexion.query(query, [idPaciente]);
-  return resultado.map(resultado => resultado);
-}
-*/
 
 //Busca los reportes de un paciente en particular
 async function buscarReportesPorPaciente(idPaciente) {
