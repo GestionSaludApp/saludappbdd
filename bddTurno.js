@@ -482,7 +482,7 @@ async function cambiarSituacionTurno(idTurno, situacion) {
 
   // 2. Si fue abandonado, cancelar turno
   if (situacion === 'abandonado') {
-    await cancelarTurno('Administracion', 'Sistema', idTurno);
+    await cancelarTurno(0, 'Sistema', idTurno);
   }
 }
 
