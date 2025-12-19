@@ -290,7 +290,7 @@ async function solicitarTurno(turno, ip) {
   enviarEmailGeneral(
     usuario.email,
     'Reserva de turno',
-    'Se ha reservado exitosamente el turno.',
+    'Se ha reservado exitosamente el turno: '+turno.idTurno,
   );
 
   auditarCambios(idUsuario, ip, 'Se solicitó el turno '+turno.idTurno+' para el paciente ' + turno.idPaciente);
@@ -449,7 +449,7 @@ async function cancelarTurno(idUsuario, ip, idTurno) {
     enviarEmailGeneral(
       usuario.email,
       'Cancelación de turno',
-      'Se ha cancelado su turno.',
+      'Se ha cancelado su turno: '+idTurno,
     );
 
     auditarCambios(idUsuario, ip, 'Se canceló el turno ' + idTurno);
