@@ -152,7 +152,7 @@ async function buscarTurnosPorUsuario(filtros) {
 
 async function buscarProfesionalesPorPaciente(idPerfilPaciente) {
   try {
-    const profesionales = await bddTurnos.buscarProfesionalesPorPaciente(idPerfilPaciente);
+    const profesionales = await bddTurno.buscarProfesionalesPorPaciente(idPerfilPaciente);
 
     return {
       valido: true,
