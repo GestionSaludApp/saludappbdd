@@ -39,7 +39,7 @@ async function registrarUsuario(ip, nuevoUsuario, nuevoPerfil) {
 
     await registrarPerfil(conx, idUsuario, idPerfil, nuevoPerfil);
 
-    enviarEmailRegistro(
+    await enviarEmailRegistro(
       nuevoUsuario.email,
       'Bienvenido ' + nuevoPerfil.nombre + ' a SaludApp',
       'Su codigo de activacion sera: ',
