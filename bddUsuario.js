@@ -15,7 +15,7 @@ const conexion = mysql.createPool(credenciales.mysql);
 
 //FUNCIONES PARA EL REGISTRO
 async function registrarUsuario(ip, nuevoUsuario, nuevoPerfil) {
-  nuevoCodigo = generarCodigoActivacion();
+  const nuevoCodigo = generarCodigoActivacion();
   const sql = `
     INSERT INTO usuarios (email, password, fechaCreacion, ultimoIngreso, codigo)
     VALUES (?, ?, ?, ?, ?)
