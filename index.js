@@ -236,7 +236,7 @@ app.post('/finalizarTurno', async (req, res) => {
 
 // BUSCAR PROFESIONALES POR PACIENTE
 app.post('/buscarProfesionalesPorPaciente', async (req, res) => {
-  const idPerfilPaciente = req.body; // número directo, como venís usando
+  const { idPerfilPaciente } = req.body;
 
   const resultado = await control.buscarProfesionalesPorPaciente(idPerfilPaciente);
 
