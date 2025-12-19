@@ -234,6 +234,19 @@ app.post('/finalizarTurno', async (req, res) => {
   }
 });
 
+// BUSCAR PROFESIONALES POR PACIENTE
+app.post('/buscarProfesionalesPorPaciente', async (req, res) => {
+  const idPerfilPaciente = req.body; // número directo, como venís usando
+
+  const resultado = await control.buscarProfesionalesPorPaciente(idPerfilPaciente);
+
+  if (resultado.valido) {
+    res.status(200).json(resultado.profesionales);
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});
+
 //AGREGAR ESPECIALIDADES
 app.post('/agregarEspecialidad', async (req, res) => {
   try {

@@ -124,6 +124,21 @@ async function obtenerTurnos({ idEspecialidad, idSeccional, diaSemana, idPerfil 
   return turnosDisponibles;
 }
 
+// OBTENER PROFESIONALES ATENDIDOS POR PACIENTE
+async function buscarProfesionalesPorPaciente(idPerfilPaciente) {
+
+  const query = `
+    SELECT DISTINCT idPerfilProfesional
+    FROM turnosFinalizados
+    WHERE idPerfilPaciente = ?
+  `;
+
+  const [resultado] = await conexion.query(query, [idPerfilPaciente]);
+
+  // devolvemos solo los ids (array plano)
+  return resultado.map(r => r.idPerfilProfesional);
+}
+
 //Obtiene turnos para las vistas de cronograma de usuarios
 async function obtenerTurnosPorUsuarioORIGINAL({ idPerfil, idEspecialidad, idSeccional, diaSemana }) {
   let query = `
@@ -548,5 +563,6 @@ module.exports = {
   cancelarTurno,
   finalizarTurno,
   agregarReporte,
-  buscarReportesPorPaciente
+  buscarReportesPorPaciente,
+  buscarProfesionalesPorPaciente
 };

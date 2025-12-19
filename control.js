@@ -150,6 +150,25 @@ async function buscarTurnosPorUsuario(filtros) {
   }
 }
 
+async function buscarProfesionalesPorPaciente(idPerfilPaciente) {
+  try {
+    const profesionales = await bddTurnos.buscarProfesionalesPorPaciente(idPerfilPaciente);
+
+    return {
+      valido: true,
+      profesionales
+    };
+
+  } catch (error) {
+    console.error('Error al buscar profesionales por paciente:', error);
+
+    return {
+      valido: false,
+      mensaje: 'Error al buscar profesionales del paciente'
+    };
+  }
+}
+
 async function solicitarTurno(turno, ip) {
   try {
     const resultado = await bddTurno.solicitarTurno(turno, ip);
@@ -484,5 +503,6 @@ module.exports = {
   buscarAuditoria,
   buscarPendientes,
   buscarPerfilesPorPermiso,
-  cambiarEstado
+  cambiarEstado,
+  buscarProfesionalesPorPaciente
 };
