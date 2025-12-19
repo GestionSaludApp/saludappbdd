@@ -192,7 +192,7 @@ async function buscarReportesPorPaciente(idPaciente) {
       r.*,
       CONCAT(pac.nombre, ' ', pac.apellido) AS nombrePaciente,
       CONCAT(prof.nombre, ' ', prof.apellido) AS nombreProfesional,
-      prof.especialidad AS especialidad
+      prof.idEspecialidad AS especialidad
     FROM reportes r
     JOIN perfiles pac
       ON pac.idPerfil = r.idPerfilPaciente
