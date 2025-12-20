@@ -426,10 +426,10 @@ async function enviarConsulta(nombre, email, mensaje) {
       };
     }
 
-    const cuerpoEmail =
-      `Consulta de ${nombre}\n\n` +
-      `${mensaje}\n\n` +
-      `Responder a ${email}`;
+  const cuerpoEmail =
+    `Consulta de ${nombre}<br><br>` +
+    `${mensaje.replace(/\n/g, '<br>')}<br><br>` +
+    `Responder a ${email}`;
 
     // email destino REAL (no el que manda el usuario)
     const destinatario = credenciales.email.usuario;
