@@ -488,6 +488,20 @@ app.post('/buscarPerfilesPorPermiso', async (req, res) => {
   }
 });
 
+// ENVIAR CONSULTA GENERAL
+app.post('/enviarConsulta', async (req, res) => {
+  const { nombre, email, mensaje } = req.body;
+
+  const resultado = await control.enviarConsulta(nombre, email, mensaje);
+
+  if (resultado.valido) {
+    res.status(200).json({ ok: true });
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});
+
+
 //ALMACENAR IMAGENES EN CLOUDINARY
 app.post('/guardarImagen', async (req, res) => {
   try {

@@ -415,6 +415,44 @@ async function cambiarSituacionTurno(idTurno, situacion) {
   }
 }
 
+async function enviarConsulta(nombre, email, mensaje) {
+  try {
+    if (!nombre || !email || !mensaje) {
+      return {
+        valido: false,
+        mensaje: 'Datos incompletos'
+      };
+    }
+
+    const cuerpoEmail =
+      `Consulta de ${nombre}\n\n` +
+      `${mensaje}\n\n` +
+      `Responder a ${email}`;
+
+    // email destino REAL (no el que manda el usuario)
+    const destinatario = credenciales.email.usuario;
+
+    const enviado = await bddUsuario.enviarEmailGeneral(
+      destinatario,
+      'Consulta desde la aplicación',
+      cuerpoEmail
+    );
+
+    if (!enviado) {
+      throw new Error('No se pudo enviar el email');
+    }
+
+    return { valido: true };
+
+  } catch (error) {
+    console.error('Error al enviar consulta:', error);
+    return {
+      valido: false,
+      mensaje: 'Error al enviar la consulta'
+    };
+  }
+}
+
 // BUSCAR AUDITORIA
 async function buscarAuditoria(cantidad) {
   try {
@@ -540,5 +578,6 @@ module.exports = {
   buscarPerfilesPorPermiso,
   cambiarEstado,
   buscarProfesionalesPorPaciente,
-  cambiarSituacionTurno
+  cambiarSituacionTurno,
+  enviarConsulta
 };
