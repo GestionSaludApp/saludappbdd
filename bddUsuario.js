@@ -492,5 +492,6 @@ module.exports = {
   activarUsuario,
   modificarPerfil,
   ingresarUsuario,
-  ingresarPerfil
+  ingresarPerfil,
+  enviarEmailGeneral
 };
