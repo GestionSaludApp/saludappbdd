@@ -501,18 +501,11 @@ app.post('/enviarConsulta', async (req, res) => {
   }
 });
 
+//REINICIAR PASSWORD
 app.post('/reiniciarPassword', async (req, res) => {
   try {
     const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ error: 'Email requerido' });
-    }
-
-    // IP real (Vercel / proxy / local)
-    const ip =
-      req.headers['x-forwarded-for']?.split(',')[0] ||
-      req.socket.remoteAddress;
+    const ip = req.ip || req.headers['x-forwarded-for'] || 'desconocida';
 
     const resultado = await control.reiniciarPassword(ip, email);
 
@@ -523,7 +516,7 @@ app.post('/reiniciarPassword', async (req, res) => {
     }
 
   } catch (error) {
-    console.error('Error en /reiniciarPassword:', error);
+    console.error('Error en endpoint reiniciarPassword:', error);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });

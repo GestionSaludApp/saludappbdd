@@ -245,17 +245,17 @@ async function reiniciarPassword(ip, email) {
 
     // 4. Auditar
     auditarCambios(
-      idUsuario,
+      0,
       ip,
-      'Solicitud de reinicio de contraseña'
+      'Solicitud de reinicio de contraseña para el usuario: '+idUsuario
     );
 
     // 5. Enviar email
     const mensaje =
-      `Se solicitó el reinicio de su contraseña.\n\n` +
-      `Código: ${codigo}\n\n` +
+      `Se solicitó el reinicio de su contraseña.<br><br>` +
+      `Código: ${codigo}<br><br>` +
       `Si usted no realizó esta solicitud, ignore este mensaje.`;
-
+    
     await enviarEmailGeneral(
       email,
       'Reinicio de contraseña',

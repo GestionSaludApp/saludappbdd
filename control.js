@@ -464,22 +464,17 @@ async function reiniciarPassword(ip, email) {
       };
     }
 
-    const resultado = await bddUsuario.reiniciarPassword(ip, email);
+    await bddUsuario.reiniciarPassword(ip, email);
 
-    if (!resultado) {
-      return {
-        valido: false,
-        mensaje: 'No se pudo iniciar el reinicio de contraseña'
-      };
-    }
-
+    // SIEMPRE devolvemos éxito (seguridad)
     return { valido: true };
 
   } catch (error) {
     console.error('Error en control.reiniciarPassword:', error);
+
     return {
       valido: false,
-      mensaje: 'Error al procesar la solicitud'
+      mensaje: 'No se pudo procesar la solicitud'
     };
   }
 }
@@ -559,7 +554,6 @@ async function cambiarEstado(tabla, id, nuevoEstado) {
     };
   }
 }
-
 
 async function buscarPerfilesPorPermiso() {
   try {
