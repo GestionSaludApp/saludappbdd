@@ -501,6 +501,32 @@ app.post('/enviarConsulta', async (req, res) => {
   }
 });
 
+app.post('/reiniciarPassword', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email requerido' });
+    }
+
+    // IP real (Vercel / proxy / local)
+    const ip =
+      req.headers['x-forwarded-for']?.split(',')[0] ||
+      req.socket.remoteAddress;
+
+    const resultado = await control.reiniciarPassword(ip, email);
+
+    if (resultado.valido) {
+      res.status(200).json({ ok: true });
+    } else {
+      res.status(400).json({ error: resultado.mensaje });
+    }
+
+  } catch (error) {
+    console.error('Error en /reiniciarPassword:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
 
 //ALMACENAR IMAGENES EN CLOUDINARY
 app.post('/guardarImagen', async (req, res) => {

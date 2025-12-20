@@ -217,21 +217,110 @@ async function registrarPerfilAdicional(ip, idUsuario, nuevoPerfil){
 }
 
 //CAMBIAR CONTRASEÑA
-async function reiniciarPassword(ip, email){
-  /*
-  agregar codigo en el usuario cuyo email coincida
-  enviar email con link para cambiar contraseña
-  al apretar el link se solicita codigo y nueva contraseña y verificacion
-  en otra funcion se modifica la tabla eliminando el codigo y cambiando la contraseña
-  */
+async function reiniciarPassword(ip, email) {
+  try {
+    if (!email) {
+      return { valido: false, mensaje: 'Email requerido' };
+    }
+
+    // 1. Buscar usuario activo
+    const usuario = await db('usuarios')
+      .where({ email, estado: 'activo' })
+      .first();
+
+    if (!usuario) {
+      return { valido: false, mensaje: 'Usuario no encontrado o inactivo' };
+    }
+
+    // 2. Generar código
+    const codigo = generarCodigoActivacion();
+
+    // 3. Guardar código en la BD
+    await db('usuarios')
+      .where({ email })
+      .update({ codigo });
+
+    // 4. Armar email
+    const link = `https://front-ultima-version.vercel.app/inicio/olvidecontra`;
+
+    const mensaje =
+      `Se solicitó un reinicio de contraseña.<br><br>` +
+      `Código de verificación: <strong>${codigo}</strong><br><br>` +
+      `Ingresá al siguiente enlace para continuar:<br>` +
+      `<a href="${link}">${link}</a><br><br>` +
+      `Si no solicitaste este cambio, ignorá este mensaje.`;
+
+    // 5. Enviar email
+    const enviado = await enviarEmailGeneral(
+      email,
+      'Reinicio de contraseña',
+      mensaje
+    );
+
+    if (!enviado) {
+      throw new Error('No se pudo enviar el email');
+    }
+
+    return { valido: true };
+
+  } catch (error) {
+    console.error('Error en reiniciarPassword:', error);
+    return {
+      valido: false,
+      mensaje: 'Error al solicitar reinicio de contraseña'
+    };
+  }
 }
 
-async function cambiarPassword(ip, email){
-  /*
-  buscar el usuario correspondiente en la tabla usuarios
-  verificar que el codigo coincide con lo ingresado y que NO ESTE VACIO
-  modificar contraseña y eliminar codigo
-  */
+async function cambiarPassword(ip, email, nuevaPassword, codigoIngresado) {
+  try {
+    if (!email || !nuevaPassword || !codigoIngresado) {
+      return { valido: false, mensaje: 'Datos incompletos' };
+    }
+
+    // 1. Buscar usuario activo
+    const usuario = await db('usuarios')
+      .where({ email, estado: 'activo' })
+      .first();
+
+    if (!usuario) {
+      return { valido: false, mensaje: 'Usuario no encontrado o inactivo' };
+    }
+
+    // 2. Verificar código
+    if (!usuario.codigo || usuario.codigo !== codigoIngresado) {
+      return { valido: false, mensaje: 'Código inválido' };
+    }
+
+    // 3. Cambiar password y limpiar código
+    await db('usuarios')
+      .where({ email })
+      .update({
+        password: nuevaPassword,
+        codigo: ''
+      });
+
+    // 4. Auditar
+    await auditarCambios(
+      `Cambio de contraseña para el usuario ${email} desde IP ${ip}`
+    );
+
+    // 5. Email confirmación
+    await enviarEmailGeneral(
+      email,
+      'Contraseña modificada',
+      'Su contraseña fue modificada exitosamente.'
+    );
+
+    return { valido: true };
+
+  } catch (error) {
+    console.error('Error en cambiarPassword:', error);
+    return {
+      valido: false,
+      mensaje: 'Error al cambiar la contraseña'
+    };
+  }
 }
 
 //FUNCIONES PARA EL INGRESO
@@ -493,5 +582,7 @@ module.exports = {
   modificarPerfil,
   ingresarUsuario,
   ingresarPerfil,
-  enviarEmailGeneral
+  enviarEmailGeneral,
+  reiniciarPassword,
+  cambiarPassword
 };

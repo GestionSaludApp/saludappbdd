@@ -455,6 +455,35 @@ async function enviarConsulta(nombre, email, mensaje) {
   }
 }
 
+async function reiniciarPassword(ip, email) {
+  try {
+    if (!email) {
+      return {
+        valido: false,
+        mensaje: 'Email inválido'
+      };
+    }
+
+    const resultado = await bddUsuario.reiniciarPassword(ip, email);
+
+    if (!resultado) {
+      return {
+        valido: false,
+        mensaje: 'No se pudo iniciar el reinicio de contraseña'
+      };
+    }
+
+    return { valido: true };
+
+  } catch (error) {
+    console.error('Error en control.reiniciarPassword:', error);
+    return {
+      valido: false,
+      mensaje: 'Error al procesar la solicitud'
+    };
+  }
+}
+
 // BUSCAR AUDITORIA
 async function buscarAuditoria(cantidad) {
   try {
@@ -581,5 +610,6 @@ module.exports = {
   cambiarEstado,
   buscarProfesionalesPorPaciente,
   cambiarSituacionTurno,
-  enviarConsulta
+  enviarConsulta,
+  reiniciarPassword
 };
