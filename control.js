@@ -425,8 +425,8 @@ async function enviarConsulta(nombre, email, mensaje) {
         mensaje: 'Datos incompletos'
       };
     }
-
-  const cuerpoEmail =
+  
+    const cuerpoEmail =
     `Consulta de ${nombre}<br><br>` +
     `${mensaje.replace(/\n/g, '<br>')}<br><br>` +
     `Responder a ${email}`;
@@ -440,7 +440,21 @@ async function enviarConsulta(nombre, email, mensaje) {
       cuerpoEmail
     );
 
-    if (!enviado) {
+    const cuerpoEmailUsuario =
+    `Estimada/o ${nombre}: Recibimos tu consulta:<br><br>` +
+    `${mensaje.replace(/\n/g, '<br>')}<br><br>` +
+    `En breve un administrador se pondrá en contacto con vos.`;
+
+    // email destino REAL (no el que manda el usuario)
+    const destinatarioU = email;
+
+    const enviadoU = await bddUsuario.enviarEmailGeneral(
+      destinatarioU,
+      'Consulta a SaludApp',
+      cuerpoEmailUsuario
+    );
+
+    if (!enviado || !enviadoU) {
       throw new Error('No se pudo enviar el email');
     }
 
