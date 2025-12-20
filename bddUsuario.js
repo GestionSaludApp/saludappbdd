@@ -218,57 +218,55 @@ async function registrarPerfilAdicional(ip, idUsuario, nuevoPerfil){
 
 //CAMBIAR CONTRASEÑA
 async function reiniciarPassword(ip, email) {
+  const conx = await conexion.getConnection();
+
   try {
-    if (!email) {
-      return { valido: false, mensaje: 'Email requerido' };
+    // 1. Buscar usuario activo por email
+    const [usuarios] = await conx.query(
+      'SELECT idUsuario FROM usuarios WHERE email = ? AND estado = "activo"',
+      [email]
+    );
+
+    // ⚠️ No revelamos si existe o no
+    if (usuarios.length === 0) {
+      return;
     }
 
-    // 1. Buscar usuario activo
-    const usuario = await db('usuarios')
-      .where({ email, estado: 'activo' })
-      .first();
-
-    if (!usuario) {
-      return { valido: false, mensaje: 'Usuario no encontrado o inactivo' };
-    }
+    const idUsuario = usuarios[0].idUsuario;
 
     // 2. Generar código
     const codigo = generarCodigoActivacion();
 
-    // 3. Guardar código en la BD
-    await db('usuarios')
-      .where({ email })
-      .update({ codigo });
+    // 3. Guardar código
+    await conx.query(
+      'UPDATE usuarios SET codigo = ? WHERE idUsuario = ?',
+      [codigo, idUsuario]
+    );
 
-    // 4. Armar email
-    const link = `https://front-ultima-version.vercel.app/inicio/olvidecontra`;
-
-    const mensaje =
-      `Se solicitó un reinicio de contraseña.<br><br>` +
-      `Código de verificación: <strong>${codigo}</strong><br><br>` +
-      `Ingresá al siguiente enlace para continuar:<br>` +
-      `<a href="${link}">${link}</a><br><br>` +
-      `Si no solicitaste este cambio, ignorá este mensaje.`;
+    // 4. Auditar
+    auditarCambios(
+      idUsuario,
+      ip,
+      'Solicitud de reinicio de contraseña'
+    );
 
     // 5. Enviar email
-    const enviado = await enviarEmailGeneral(
+    const mensaje =
+      `Se solicitó el reinicio de su contraseña.\n\n` +
+      `Código: ${codigo}\n\n` +
+      `Si usted no realizó esta solicitud, ignore este mensaje.`;
+
+    await enviarEmailGeneral(
       email,
       'Reinicio de contraseña',
       mensaje
     );
 
-    if (!enviado) {
-      throw new Error('No se pudo enviar el email');
-    }
-
-    return { valido: true };
-
   } catch (error) {
     console.error('Error en reiniciarPassword:', error);
-    return {
-      valido: false,
-      mensaje: 'Error al solicitar reinicio de contraseña'
-    };
+    throw error;
+  } finally {
+    conx.release();
   }
 }
 
