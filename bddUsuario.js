@@ -270,37 +270,43 @@ async function reiniciarPassword(ip, email) {
   }
 }
 
+// CAMBIAR CONTRASEÑA
 async function cambiarPassword(ip, email, nuevaPassword, codigoIngresado) {
+  const conx = await conexion.getConnection();
+
   try {
     if (!email || !nuevaPassword || !codigoIngresado) {
       return { valido: false, mensaje: 'Datos incompletos' };
     }
 
     // 1. Buscar usuario activo
-    const usuario = await db('usuarios')
-      .where({ email, estado: 'activo' })
-      .first();
+    const [usuarios] = await conx.query(
+      'SELECT idUsuario, codigo FROM usuarios WHERE email = ? AND estado = "activo"',
+      [email]
+    );
 
-    if (!usuario) {
+    if (usuarios.length === 0) {
       return { valido: false, mensaje: 'Usuario no encontrado o inactivo' };
     }
+
+    const usuario = usuarios[0];
 
     // 2. Verificar código
     if (!usuario.codigo || usuario.codigo !== codigoIngresado) {
       return { valido: false, mensaje: 'Código inválido' };
     }
 
-    // 3. Cambiar password y limpiar código
-    await db('usuarios')
-      .where({ email })
-      .update({
-        password: nuevaPassword,
-        codigo: ''
-      });
+    // 3. Cambiar contraseña y limpiar código
+    await conx.query(
+      'UPDATE usuarios SET password = ?, codigo = "" WHERE email = ?',
+      [nuevaPassword, email]
+    );
 
-    // 4. Auditar
+    // 4. Auditoría
     await auditarCambios(
-      `Cambio de contraseña para el usuario ${email} desde IP ${ip}`
+      0,
+      ip,
+      `Cambio de contraseña del usuario ${usuario.idUsuario}`
     );
 
     // 5. Email confirmación
@@ -318,6 +324,8 @@ async function cambiarPassword(ip, email, nuevaPassword, codigoIngresado) {
       valido: false,
       mensaje: 'Error al cambiar la contraseña'
     };
+  } finally {
+    conx.release();
   }
 }
 

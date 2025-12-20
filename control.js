@@ -479,6 +479,26 @@ async function reiniciarPassword(ip, email) {
   }
 }
 
+async function cambiarPassword(ip, email, nuevaPassword, codigo) {
+  try {
+    const resultado = await bddUsuario.cambiarPassword(
+      ip,
+      email,
+      nuevaPassword,
+      codigo
+    );
+
+    return resultado;
+
+  } catch (error) {
+    console.error('Error en control.cambiarPassword:', error);
+    return {
+      valido: false,
+      mensaje: 'Error interno'
+    };
+  }
+}
+
 // BUSCAR AUDITORIA
 async function buscarAuditoria(cantidad) {
   try {
@@ -605,5 +625,6 @@ module.exports = {
   buscarProfesionalesPorPaciente,
   cambiarSituacionTurno,
   enviarConsulta,
-  reiniciarPassword
+  reiniciarPassword,
+  cambiarPassword
 };

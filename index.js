@@ -521,6 +521,28 @@ app.post('/reiniciarPassword', async (req, res) => {
   }
 });
 
+// CAMBIAR PASSWORD
+app.post('/cambiarPassword', async (req, res) => {
+  const { email, codigo, nuevaPassword } = req.body;
+
+  const ip =
+    req.headers['x-forwarded-for']?.split(',')[0] ||
+    req.socket.remoteAddress;
+
+  const resultado = await control.cambiarPassword(
+    ip,
+    email,
+    nuevaPassword,
+    codigo
+  );
+
+  if (resultado.valido) {
+    res.status(200).json({ ok: true });
+  } else {
+    res.status(400).json({ error: resultado.mensaje });
+  }
+});
+
 //ALMACENAR IMAGENES EN CLOUDINARY
 app.post('/guardarImagen', async (req, res) => {
   try {
